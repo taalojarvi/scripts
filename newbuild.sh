@@ -104,7 +104,7 @@ function update_repo()  {
 function make_menuconfig()  {
 	make stratosphere_defconfig CC=clang O=$BASE_DIR/output/
 	make menuconfig CC=clang O=$BASE_DIR/output/
-	menu ;;
+	menu
 }
 # Menu
 function menu()  {
