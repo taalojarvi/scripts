@@ -16,7 +16,6 @@ export KBUILD_BUILD_USER="Taalojarvi"
 export KBUILD_BUILD_HOST="Travis-CI"
 export USE_HOST_LEX=yes
 export ZipID=$TRAVIS_BUILD_ID
-export KERNEL_IMG=output/arch/arm64/boot/Image.gz-dtb
 export USE_CCACHE=1
 export CCACHE_EXEC=$(command -v ccache)
 
