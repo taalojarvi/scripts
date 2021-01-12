@@ -15,7 +15,7 @@ export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 export KBUILD_BUILD_USER="Taalojarvi"
 export KBUILD_BUILD_HOST="Travis-CI"
 export USE_HOST_LEX=yes
-export ZipID=$TRAVIS_BUILD_ID
+export ZipID=$(date +"%s")
 export USE_CCACHE=1
 export CCACHE_EXEC=$(command -v ccache)
 
@@ -24,7 +24,7 @@ KERNEL_NAME="Stratosphere"
 VERSION="ME"
 DATE=$(date +"%d-%m-%Y-%I-%M")
 DEVICE="NOKIA_SDM660"
-FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
+FINAL_ZIP=$KERNEL_NAME-$VERSION-$ZipID.zip
 defconfig=stratosphere_defconfig
 
 # Dirs
@@ -72,8 +72,8 @@ function make_package()  {
 	cp $BASE_DIR/output/arch/arm64/boot/Image.gz-dtb $ANYKERNEL_DIR
 	cd $ANYKERNEL_DIR
 	zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip
-	mv UPDATE-AnyKernel2.zip Stratosphere-Kernel-$ZipID.zip
-	cp Stratosphere-Kernel-$ZipID.zip $UPLOAD_DIR
+	mv UPDATE-AnyKernel2.zip $FINAL_ZIP.zip
+	cp $FINAL_ZIP.zip $UPLOAD_DIR
 	cd $KERNEL_DIR
 	
 }
@@ -81,6 +81,6 @@ function make_package()  {
 # Upload Flashable Zip to GitHub Releases <3
 function release()  {
 cd $UPLOAD_DIR
-gh release create ci-$TRAVIS_BUILD_ID Stratosphere-Kernel-$ZipID.zip -F releasenotes.md -p -t "Stratosphere Kernel: Automated Build"
+gh release create ci-$TRAVIS_BUILD_ID $FINAL_ZIP.zip -F releasenotes.md -p -t "Stratosphere Kernel: Automated Build"
 cd $KERNEL_DIR
 }
