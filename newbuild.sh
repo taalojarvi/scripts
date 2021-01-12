@@ -47,6 +47,7 @@ function make_releasenotes()  {
 	echo -e "Last 5 Commits before Build:-" >> releasenotes.md
 	git log --decorate=auto --pretty=reference --graph -n 10 >> releasenotes.md
 	cp releasenotes.md $BASE_DIR/Stratosphere-Canaries
+	rm releasenotes.d
 }
 
 # Make defconfig
