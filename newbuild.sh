@@ -57,7 +57,7 @@ function make_defconfig()  {
 
 # Make Kernel
 function make_kernel  {
-	make -j16 CC=clang AR=llvm-ar NM=llvm-nm STRIP=llvm-strip O=$BASE_DIR/output/
+	make -j$(nproc --all) CC=clang AR=llvm-ar NM=llvm-nm STRIP=llvm-strip O=$BASE_DIR/output/
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
  		then
