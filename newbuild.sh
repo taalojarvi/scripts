@@ -123,29 +123,35 @@ function menu()  {
 	
 	case $choice in
 		1) echo -e "Building "$KERNEL_NAME "Kernel" 
-		   update_repo ;;
-		   make_cleanup ;;
-		   make_releasenotes ;;
-		   make_defconfig ;;
-	 	   make_kernel ;;
-	 	   make_package ;;
-	 	   release ;;
+		   update_repo
+		   make_cleanup
+		   make_releasenotes
+		   make_defconfig
+	 	   make_kernel
+	 	   make_package
+	 	   release
+	 	   ;;
 		2) echo -e "Building "$KERNEL_NAME "Kernel" 
-		   make_cleanup ;;
-		   make_releasenotes ;;
-		   make_defconfig ;;
-	 	   make_kernel ;;
-	 	   make_package ;;
+		   make_cleanup
+		   make_releasenotes
+		   make_defconfig
+	 	   make_kernel
+	 	   make_package 
+	 	   ;;
 	 	3) echo -e "Building "$KERNEL_NAME "Kernel" 
-	 	   make_defconfig  ;;
-	 	   make_kernel ;;
+	 	   make_defconfig
+	 	   make_kernel
+	 	   ;;
 	 	4) echo -e "Opening Menuconfig"
-	 	   make_defconfig ;;
-	 	   make_menuconfig ;; 
+	 	   make_defconfig
+	 	   make_menuconfig
+	 	   ;;
 	 	5) echo -e "Generating configuration from defconfig"
-	 	   make_defconfig ;;
+	 	   make_defconfig
+	 	   ;;
 	 	6) echo -e "Cleaning out build artifacts. Please Wait!"
-	 	   make_cleanup ;;
+	 	   make_cleanup
+	 	   ;;
 	 esac
 	
 }
