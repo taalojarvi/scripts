@@ -13,7 +13,7 @@ export ARCH=arm64
 export CROSS_COMPILE=aarch64-linux-gnu-
 export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 export KBUILD_BUILD_USER="Taalojarvi"
-export KBUILD_BUILD_HOST="Travis-CI"
+export KBUILD_BUILD_HOST="ASUS-PC"
 export USE_HOST_LEX=yes
 export USE_CCACHE=1
 export CCACHE_EXEC=$(command -v ccache)
@@ -41,9 +41,8 @@ function make_releasenotes()  {
 	echo -e >> releasenotes.md
 	echo -e "Build Information" >> releasenotes.md
 	echo -e >> releasenotes.md
-	echo -e "Build Server Name: "$TRAVIS_APP_HOST >> releasenotes.md
-	echo -e "Build ID: "$TRAVIS_BUILD_ID >> releasenotes.md
-	echo -e "Build URL: "$TRAVIS_BUILD_WEB_URL >> releasenotes.md
+	echo -e "Builder: "$KBUILD_BUILD_USER >> releasenotes.md
+	echo -e "Machine: "$KBUILD_BUILD_HOST >> releasenotes.md
 	echo -e >> releasenotes.md
 	echo -e "Last 5 Commits before Build:-" >> releasenotes.md
 	git log --decorate=auto --pretty=reference --graph -n 10 >> releasenotes.md
@@ -80,6 +79,6 @@ function make_package()  {
 # Upload Flashable Zip to GitHub Releases <3
 function release()  {
 cd $UPLOAD_DIR
-gh release create ci-$TRAVIS_BUILD_ID $FINAL_ZIP.zip -F releasenotes.md -p -t "Stratosphere Kernel: Automated Build"
+gh release create ci-$DATE $FINAL_ZIP.zip -F releasenotes.md -p -t "Stratosphere Kernel: Automated Build"
 cd $KERNEL_DIR
 }
