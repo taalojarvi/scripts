@@ -1,11 +1,6 @@
 #!/bin/bash -e
 
 
-# Clone the repositories
-git clone --depth 1 https://github.com/kdrag0n/proton-clang
-git clone --depth 1 https://github.com/taalojarvi/AnyKernel3
-git clone --depth 1 https://github.com/Stratosphere-Kernel/Stratosphere-Canaries
-
 # Export Environment Variables
 export PATH="$(pwd)/proton-clang/bin:$PATH"
 export ARCH=arm64
