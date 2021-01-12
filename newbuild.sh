@@ -73,10 +73,13 @@ function make_package()  {
 	zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip
 	mv UPDATE-AnyKernel2.zip Stratosphere-Kernel-$ZipID.zip
 	cp Stratosphere-Kernel-$ZipID.zip $UPLOAD_DIR
-	cd ~/build/Stratosphere-Kernel/android_kernel_nokia_sdm660/Stratosphere-Canaries
+	cd $KERNEL_DIR
+	
 }
 
 # Upload Flashable Zip to GitHub Releases <3
 function release()  {
+cd $UPLOAD_DIR
 gh release create ci-$TRAVIS_BUILD_ID Stratosphere-Kernel-$ZipID.zip -F releasenotes.md -p -t "Stratosphere Kernel: Automated Build"
+cd $KERNEL_DIR
 }
