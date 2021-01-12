@@ -15,7 +15,6 @@ export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 export KBUILD_BUILD_USER="Taalojarvi"
 export KBUILD_BUILD_HOST="Travis-CI"
 export USE_HOST_LEX=yes
-export ZipID=$(date +"%s")
 export USE_CCACHE=1
 export CCACHE_EXEC=$(command -v ccache)
 
@@ -24,7 +23,7 @@ KERNEL_NAME="Stratosphere"
 VERSION="ME"
 DATE=$(date +"%d-%m-%Y-%I-%M")
 DEVICE="NOKIA_SDM660"
-FINAL_ZIP=$KERNEL_NAME-$VERSION-$ZipID.zip
+FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
 defconfig=stratosphere_defconfig
 
 # Dirs
