@@ -102,6 +102,7 @@ function artifact_check()  {
 	else
 		echo -e "No Build Artifacts found! Skipping."
 	fi
+}
 
 # Update Toolchain Repository
 function update_repo()  {
@@ -166,10 +167,13 @@ function menu()  {
 	 esac
 	
 }
+
 echo -e "Checking for artifacts from previous builds and removing them if necessary"
 artifact_check
 menu
-make_cleanup
+artifact_check
 BUILD_START=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))
 echo -e "Script execution completed after $((DIFF/60)) minute(s) and $((DIFF % 60)) seconds"
+
+
