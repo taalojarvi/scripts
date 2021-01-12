@@ -151,6 +151,7 @@ function menu()  {
 	 	   ;;
 	 	6) echo -e "Cleaning out build artifacts. Please Wait!"
 	 	   make_cleanup
+	 	   menu
 	 	   ;;
 	 esac
 	
