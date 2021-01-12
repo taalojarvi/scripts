@@ -1,4 +1,5 @@
 #!/bin/bash -e
+BUILD_START=$(date +"%s")
 
 # Colours
 blue='\033[0;34m'
@@ -32,6 +33,7 @@ KERNEL_DIR=$BASE_DIR/android_kernel_nokia_sdm660
 ANYKERNEL_DIR=$BASE_DIR/AnyKernel3
 KERNEL_IMG=$BASE_DIR/output/arch/arm64/boot/Image.gz-dtb
 UPLOAD_DIR=$BASE_DIR/Stratosphere-Canaries
+TC_DIR=$BASE_DIR/proton-clang
 
 
 # Create Release Notes
@@ -83,3 +85,73 @@ cd $UPLOAD_DIR
 gh release create pr-$DATE $FINAL_ZIP.zip -F releasenotes.md -p -t "Stratosphere Kernel: Personal Build"
 cd $KERNEL_DIR
 }
+
+# Cleanup Artifacts
+function make_cleanup()  {
+	rm $UPLOAD_DIR/releasenotes.md
+	make clean CC=clang O=$BASE_DIR/output/
+	make mr CC=clang O=$BASE_DIR/output/
+}
+
+# Update Toolchain Repository
+function update_repo()  {
+	cd $TC_DIR
+	git pull origin
+	cd $KERNEL_DIR
+}
+
+# Open Menuconfig
+function make_menuconfig()  {
+	make stratosphere_defconfig CC=clang O=$BASE_DIR/output/
+	make menuconfig CC=clang O=$BASE_DIR/output/
+	menu ;;
+}
+# Menu
+function menu()  {
+	clear
+	echo -e "What do you want to do?"
+	echo -e ""
+	echo -e "1: Build Kernel and Release it"
+	echo -e "2: Build Clean Kernel but Do not release it"
+	echo -e "3: Build Dirty Kernel "
+	echo -e "4: Make defconfig and open menuconfig"
+	echo -e "5: Make defconfig only"
+	echo -e "6: Cleanup Build Artifacts"
+	echo -e ""
+	echo -e "Awaiting User Input: "
+	read choice
+	
+	case $choice in
+		1) echo -e "Building "$KERNEL_NAME "Kernel" 
+		   update_repo ;;
+		   make_cleanup ;;
+		   make_releasenotes ;;
+		   make_defconfig ;;
+	 	   make_kernel ;;
+	 	   make_package ;;
+	 	   release ;;
+		2) echo -e "Building "$KERNEL_NAME "Kernel" 
+		   make_cleanup ;;
+		   make_releasenotes ;;
+		   make_defconfig ;;
+	 	   make_kernel ;;
+	 	   make_package ;;
+	 	3) echo -e "Building "$KERNEL_NAME "Kernel" 
+	 	   make_defconfig  ;;
+	 	   make_kernel ;;
+	 	4) echo -e "Opening Menuconfig"
+	 	   make_defconfig ;;
+	 	   make_menuconfig ;; 
+	 	5) echo -e "Generating configuration from defconfig"
+	 	   make_defconfig ;;
+	 	6) echo -e "Cleaning out build artifacts. Please Wait!"
+	 	   make_cleanup ;;
+	 esac
+	
+}
+
+menu
+make_cleanup
+BUILD_START=$(date +"%s")
+DIFF=$(($BUILD_END - $BUILD_START))
+echo -e "Script execution completed after $((DIFF/60)) minute(s) and $((DIFF % 60)) seconds"
