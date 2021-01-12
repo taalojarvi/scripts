@@ -50,7 +50,6 @@ function make_releasenotes()  {
 	echo -e "Last 5 Commits before Build:-" >> releasenotes.md
 	git log --decorate=auto --pretty=reference --graph -n 10 >> releasenotes.md
 	cp releasenotes.md $BASE_DIR/Stratosphere-Canaries
-	rm releasenotes.d
 }
 
 # Make defconfig
@@ -87,16 +86,22 @@ gh release create pr-$DATE $FINAL_ZIP.zip -F releasenotes.md -p -t "Stratosphere
 cd $KERNEL_DIR
 }
 
-# Cleanup Artifacts
+# Make Clean
 function make_cleanup()  {
-	if [ -f "$RELEASE_NOTES"]; then
-		rm $UPLOAD_DIR/releasenotes.md
-	else
-		echo -e "Release notes missing! Skipping."
-	fi
+
 	make clean CC=clang O=$BASE_DIR/output/
 	make mrproper CC=clang O=$BASE_DIR/output/
 }
+
+# Check for Artifacts from previous builds
+function artifact_check()  {
+	if [ -f "$UPLOAD_DIR/releasenotes.md" ]; then
+		rm $UPLOAD_DIR/releasenotes.md
+	elif [ -f "$KERNEL_DIR/releasenotes.md" ]; then
+		rm $KERNEL_DIR/releasenotes.md	
+	else
+		echo -e "No Build Artifacts found! Skipping."
+	fi
 
 # Update Toolchain Repository
 function update_repo()  {
@@ -161,7 +166,8 @@ function menu()  {
 	 esac
 	
 }
-
+echo -e "Checking for artifacts from previous builds and removing them if necessary"
+artifact_check
 menu
 make_cleanup
 BUILD_START=$(date +"%s")
