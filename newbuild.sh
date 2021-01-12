@@ -37,7 +37,7 @@ UPLOAD_DIR=$BASE_DIR/Stratosphere-Canaries
 # Create Release Notes
 function make_releasenotes()  {
 	touch releasenotes.md
-	echo -e "This is an Automated Build of Stratosphere Kernel. Flash at your own risk!" >> releasenotes.md
+	echo -e "This is a Personal Build of Stratosphere Kernel. Flash at your own risk!" >> releasenotes.md
 	echo -e >> releasenotes.md
 	echo -e "Build Information" >> releasenotes.md
 	echo -e >> releasenotes.md
@@ -80,6 +80,6 @@ function make_package()  {
 # Upload Flashable Zip to GitHub Releases <3
 function release()  {
 cd $UPLOAD_DIR
-gh release create ci-$DATE $FINAL_ZIP.zip -F releasenotes.md -p -t "Stratosphere Kernel: Automated Build"
+gh release create pr-$DATE $FINAL_ZIP.zip -F releasenotes.md -p -t "Stratosphere Kernel: Personal Build"
 cd $KERNEL_DIR
 }
