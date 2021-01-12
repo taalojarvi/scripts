@@ -1,1 +1,5 @@
-# scripts
+#Scripts used to build Stratosphere Kernel
+
+This repository is used to track changes to CI scripts.
+All changes made here will be pulled to Kernel source in order to reduce commit spam
+
