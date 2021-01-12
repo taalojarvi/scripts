@@ -8,17 +8,6 @@ yellow='\033[0;33m'
 red='\033[0;31m'
 nocol='\033[0m'
 
-# Export Environment Variables
-export PATH="$(pwd)/proton-clang/bin:$PATH"
-export ARCH=arm64
-export CROSS_COMPILE=aarch64-linux-gnu-
-export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
-export KBUILD_BUILD_USER="Taalojarvi"
-export KBUILD_BUILD_HOST="ASUS-PC"
-export USE_HOST_LEX=yes
-export USE_CCACHE=1
-export CCACHE_EXEC=$(command -v ccache)
-
 # Kernel details
 KERNEL_NAME="Stratosphere"
 VERSION="ME"
@@ -27,13 +16,25 @@ DEVICE="NOKIA_SDM660"
 FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
 defconfig=stratosphere_defconfig
 
-# Dirs
+# Dirs and Files
 BASE_DIR=~/
 KERNEL_DIR=$BASE_DIR/android_kernel_nokia_sdm660
 ANYKERNEL_DIR=$BASE_DIR/AnyKernel3
 KERNEL_IMG=$BASE_DIR/output/arch/arm64/boot/Image.gz-dtb
 UPLOAD_DIR=$BASE_DIR/Stratosphere-Canaries
 TC_DIR=$BASE_DIR/proton-clang
+RELEASE_NOTES=$UPLOAD_DIR/releasenotes.md
+
+# Export Environment Variables
+export PATH="$BASE_DIR/proton-clang/bin:$PATH"
+export ARCH=arm64
+export CROSS_COMPILE=aarch64-linux-gnu-
+export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+export KBUILD_BUILD_USER="Taalojarvi"
+export KBUILD_BUILD_HOST="ASUS-PC"
+export USE_HOST_LEX=yes
+export USE_CCACHE=1
+export CCACHE_EXEC=$(command -v ccache)
 
 
 # Create Release Notes
@@ -88,9 +89,13 @@ cd $KERNEL_DIR
 
 # Cleanup Artifacts
 function make_cleanup()  {
-	rm $UPLOAD_DIR/releasenotes.md
+	if [ -f "$RELEASE_NOTES"]; then
+		rm $UPLOAD_DIR/releasenotes.md
+	else
+		echo -e "Release notes missing! Skipping."
+	fi
 	make clean CC=clang O=$BASE_DIR/output/
-	make mr CC=clang O=$BASE_DIR/output/
+	make mrproper CC=clang O=$BASE_DIR/output/
 }
 
 # Update Toolchain Repository
