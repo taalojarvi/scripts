@@ -18,6 +18,22 @@ export USE_HOST_LEX=yes
 export ZipID=$TRAVIS_BUILD_ID
 export KERNEL_IMG=output/arch/arm64/boot/Image.gz-dtb
 
+# Kernel details
+KERNEL_NAME="Stratosphere"
+VERSION="ME"
+DATE=$(date +"%d-%m-%Y-%I-%M")
+DEVICE="NOKIA_SDM660"
+FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
+defconfig=stratosphere_defconfig
+
+# Dirs
+BASE_DIR=~/
+KERNEL_DIR=$BASE_DIR/android_kernel_nokia_sdm660
+ANYKERNEL_DIR=$BASE_DIR/AnyKernel3
+KERNEL_IMG=$BASE_DIR/output/arch/arm64/boot/Image.gz-dtb
+UPLOAD_DIR=$BASE_DIR/Stratosphere-Canaries
+
+
 # Create Release Notes
 function make_releasenotes()  {
 	touch releasenotes.md
@@ -31,17 +47,17 @@ function make_releasenotes()  {
 	echo -e >> releasenotes.md
 	echo -e "Last 5 Commits before Build:-" >> releasenotes.md
 	git log --decorate=auto --pretty=reference --graph -n 10 >> releasenotes.md
-	cp releasenotes.md ~/build/Stratosphere-Kernel/android_kernel_nokia_sdm660/Stratosphere-Canaries
+	cp releasenotes.md $BASE_DIR/Stratosphere-Canaries
 }
 
 # Make defconfig
 function make_defconfig()  {
-	make stratosphere_defconfig CC=clang O=output/
+	make stratosphere_defconfig CC=clang O=$BASE_DIR/output/
 }
 
 # Make Kernel
 function make_kernel  {
-	make -j16 CC=clang AR=llvm-ar NM=llvm-nm STRIP=llvm-strip O=output/
+	make -j16 CC=clang AR=llvm-ar NM=llvm-nm STRIP=llvm-strip O=$BASE_DIR/output/
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
  		then
@@ -52,11 +68,11 @@ function make_kernel  {
 
 # Make Flashable Zip
 function make_package()  {
-	cp output/arch/arm64/boot/Image.gz-dtb AnyKernel3
-	cd AnyKernel3
+	cp $BASE_DIR/output/arch/arm64/boot/Image.gz-dtb $ANYKERNEL_DIR
+	cd $ANYKERNEL_DIR
 	zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip
 	mv UPDATE-AnyKernel2.zip Stratosphere-Kernel-$ZipID.zip
-	cp Stratosphere-Kernel-$ZipID.zip ~/build/Stratosphere-Kernel/android_kernel_nokia_sdm660/Stratosphere-Canaries
+	cp Stratosphere-Kernel-$ZipID.zip $UPLOAD_DIR
 	cd ~/build/Stratosphere-Kernel/android_kernel_nokia_sdm660/Stratosphere-Canaries
 }
 
