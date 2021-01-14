@@ -14,7 +14,7 @@ VERSION="ME"
 DATE=$(date +"%d-%m-%Y-%I-%M")
 DEVICE="NOKIA_SDM660"
 FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
-defconfig=stratosphere_defconfig
+DEFCONFIG=stratosphere_defconfig
 
 # Dirs and Files
 BASE_DIR=~/
@@ -40,7 +40,7 @@ export CCACHE_EXEC=$(command -v ccache)
 # Create Release Notes
 function make_releasenotes()  {
 	touch releasenotes.md
-	echo -e "This is a Personal Build of Stratosphere Kernel. Flash at your own risk!" >> releasenotes.md
+	echo -e "This is a Personal Build of "$KERNEL_NAME" Kernel. Flash at your own risk!" >> releasenotes.md
 	echo -e >> releasenotes.md
 	echo -e "Build Information" >> releasenotes.md
 	echo -e >> releasenotes.md
@@ -54,12 +54,12 @@ function make_releasenotes()  {
 
 # Make defconfig
 function make_defconfig()  {
-	make stratosphere_defconfig CC=clang O=$BASE_DIR/output/
+	make $DEFCONFIG CC=clang O=$BASE_DIR/output/
 }
 
 # Make Kernel
 function make_kernel  {
-	make -j$(nproc --all) CC=clang AR=llvm-ar NM=llvm-nm STRIP=llvm-strip O=$BASE_DIR/output/
+	make -j$(nproc --all) CC='ccache clang' AR=llvm-ar NM=llvm-nm STRIP=llvm-strip O=$BASE_DIR/output/
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
  		then
@@ -93,7 +93,7 @@ function make_cleanup()  {
 	make mrproper CC=clang O=$BASE_DIR/output/
 }
 
-# Check for Artifacts from previous builds
+# Check for Script Artifacts from previous builds
 function artifact_check()  {
 	if [ -f "$UPLOAD_DIR/releasenotes.md" ]; then
 		rm $UPLOAD_DIR/releasenotes.md
@@ -113,21 +113,34 @@ function update_repo()  {
 
 # Open Menuconfig
 function make_menuconfig()  {
-	make stratosphere_defconfig CC=clang O=$BASE_DIR/output/
+	make $DEFCONFIG CC=clang O=$BASE_DIR/output/
 	make menuconfig CC=clang O=$BASE_DIR/output/
-	menu
 }
+
+# Clear CCACHE
+function clear_ccache  {
+	ccache -Cz
+}
+
+# Regenerate Defconfig
+function regen_defconfig()  {
+	make savedefconfig CC=clang O=$BASE_DIR/output
+}
+	
 # Menu
 function menu()  {
 	clear
 	echo -e "What do you want to do?"
 	echo -e ""
-	echo -e "1: Build Kernel and Release it"
+	echo -e "1: Build Kernel and Release it to Github"
 	echo -e "2: Build Clean Kernel but Do not release it"
 	echo -e "3: Build Dirty Kernel "
 	echo -e "4: Make defconfig and open menuconfig"
 	echo -e "5: Make defconfig only"
 	echo -e "6: Cleanup Build Artifacts"
+	echo -e "7: Clear ccache and reset stats"
+	echo -e "8: Regenerate defconfig"
+	echo -e "9: Exit Script"
 	echo -e ""
 	echo -e "Awaiting User Input: "
 	read choice
@@ -156,14 +169,26 @@ function menu()  {
 	 	4) echo -e "Opening Menuconfig"
 	 	   make_defconfig
 	 	   make_menuconfig
+	 	   menu
 	 	   ;;
 	 	5) echo -e "Generating configuration from defconfig"
 	 	   make_defconfig
+	 	   menu
 	 	   ;;
 	 	6) echo -e "Cleaning out build artifacts. Please Wait!"
 	 	   make_cleanup
 	 	   menu
 	 	   ;;
+	 	7) echo -e "Clearing ccache and resetting stats"
+	 	   clear_ccache
+	 	   menu
+	 	   ;;
+	 	8) echo -e "Regenerating defconfig"
+	 	   make_defconfig
+	 	   regen_defconfig
+	 	   menu
+	 	   ;;
+	 	   
 	 esac
 	
 }
@@ -172,8 +197,6 @@ echo -e "Checking for artifacts from previous builds and removing them if necess
 artifact_check
 menu
 artifact_check
-BUILD_START=$(date +"%s")
+BUILD_END=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))
 echo -e "Script execution completed after $((DIFF/60)) minute(s) and $((DIFF % 60)) seconds"
-
-
