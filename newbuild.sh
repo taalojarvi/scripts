@@ -25,6 +25,7 @@ TC_DIR=$BASE_DIR/proton-clang
 RELEASE_NOTES=$UPLOAD_DIR/releasenotes.md
 OUTPUT=$BASE_DIR/output
 KERNEL_IMG=$OUTPUT/arch/arm64/boot/Image.gz-dtb
+LOG_DIR=$BASE_DIR/logs
 
 # Export Environment Variables
 export PATH="$BASE_DIR/proton-clang/bin:$PATH"
@@ -60,7 +61,7 @@ function make_defconfig()  {
 
 # Make Kernel
 function make_kernel  {
-	make -j$(nproc --all) CC='ccache clang' AR=llvm-ar NM=llvm-nm STRIP=llvm-strip O=$OUTPUT
+	make -j$(nproc --all) CC='ccache clang' AR=llvm-ar NM=llvm-nm STRIP=llvm-strip O=$OUTPUT 2>&1 | tee $LOG_DIR/$DATE.log
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
  		then
