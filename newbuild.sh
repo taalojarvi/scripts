@@ -20,10 +20,11 @@ DEFCONFIG=stratosphere_defconfig
 BASE_DIR=~/
 KERNEL_DIR=$BASE_DIR/android_kernel_nokia_sdm660
 ANYKERNEL_DIR=$BASE_DIR/AnyKernel3
-KERNEL_IMG=$BASE_DIR/output/arch/arm64/boot/Image.gz-dtb
 UPLOAD_DIR=$BASE_DIR/Stratosphere-Canaries
 TC_DIR=$BASE_DIR/proton-clang
 RELEASE_NOTES=$UPLOAD_DIR/releasenotes.md
+OUTPUT=$BASE_DIR/output
+KERNEL_IMG=$OUTPUT/arch/arm64/boot/Image.gz-dtb
 
 # Export Environment Variables
 export PATH="$BASE_DIR/proton-clang/bin:$PATH"
@@ -54,12 +55,12 @@ function make_releasenotes()  {
 
 # Make defconfig
 function make_defconfig()  {
-	make $DEFCONFIG CC=clang O=$BASE_DIR/output/
+	make $DEFCONFIG CC=clang O=$OUTPUT
 }
 
 # Make Kernel
 function make_kernel  {
-	make -j$(nproc --all) CC='ccache clang' AR=llvm-ar NM=llvm-nm STRIP=llvm-strip O=$BASE_DIR/output/
+	make -j$(nproc --all) CC='ccache clang' AR=llvm-ar NM=llvm-nm STRIP=llvm-strip O=$OUTPUT
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
  		then
@@ -70,7 +71,7 @@ function make_kernel  {
 
 # Make Flashable Zip
 function make_package()  {
-	cp $BASE_DIR/output/arch/arm64/boot/Image.gz-dtb $ANYKERNEL_DIR
+	cp $OUTPUT/arch/arm64/boot/Image.gz-dtb $ANYKERNEL_DIR
 	cd $ANYKERNEL_DIR
 	zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip
 	mv UPDATE-AnyKernel2.zip $FINAL_ZIP.zip
@@ -89,8 +90,8 @@ cd $KERNEL_DIR
 # Make Clean
 function make_cleanup()  {
 
-	make clean CC=clang O=$BASE_DIR/output/
-	make mrproper CC=clang O=$BASE_DIR/output/
+	make clean CC=clang O=$OUTPUT
+	make mrproper CC=clang O=$OUTPUT
 }
 
 # Check for Script Artifacts from previous builds
@@ -113,8 +114,7 @@ function update_repo()  {
 
 # Open Menuconfig
 function make_menuconfig()  {
-	make $DEFCONFIG CC=clang O=$BASE_DIR/output/
-	make menuconfig CC=clang O=$BASE_DIR/output/
+	make menuconfig CC=clang O=$OUTPUT
 }
 
 # Clear CCACHE
@@ -124,7 +124,7 @@ function clear_ccache  {
 
 # Regenerate Defconfig
 function regen_defconfig()  {
-	make savedefconfig CC=clang O=$BASE_DIR/output
+	make savedefconfig CC=clang O=$OUTPUT
 }
 	
 # Menu
