@@ -124,7 +124,9 @@ function clear_ccache  {
 
 # Regenerate Defconfig
 function regen_defconfig()  {
-	make savedefconfig CC=clang O=$OUTPUT
+	cp $OUTPUT/.config $KERNEL_DIR/arch/arm64/configs/$DEFCONFIG
+	git add arch/arm64/configs/$DEFCONFIG
+	git commit
 }
 	
 # Menu
