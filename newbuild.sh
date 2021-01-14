@@ -101,7 +101,7 @@ function artifact_check()  {
 	elif [ -f "$KERNEL_DIR/releasenotes.md" ]; then
 		rm $KERNEL_DIR/releasenotes.md	
 	else
-		echo -e "No Build Artifacts found! Skipping."
+		echo -e "No Script Artifacts found! Skipping."
 	fi
 }
 
@@ -151,6 +151,7 @@ function menu()  {
 		1) echo -e "Building "$KERNEL_NAME "Kernel" 
 		   update_repo
 		   make_cleanup
+		   artifact_check
 		   make_releasenotes
 		   make_defconfig
 	 	   make_kernel
@@ -159,6 +160,7 @@ function menu()  {
 	 	   ;;
 		2) echo -e "Building "$KERNEL_NAME "Kernel" 
 		   make_cleanup
+		   artifact_check
 		   make_releasenotes
 		   make_defconfig
 	 	   make_kernel
@@ -196,9 +198,7 @@ function menu()  {
 }
 
 echo -e "Checking for artifacts from previous builds and removing them if necessary"
-artifact_check
 menu
-artifact_check
 BUILD_END=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))
 echo -e "Script execution completed after $((DIFF/60)) minute(s) and $((DIFF % 60)) seconds"
