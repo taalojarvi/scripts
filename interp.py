@@ -11,8 +11,8 @@ from scipy import interpolate
 # P.S.: The default source values are from sdm632
 
 # Target frequencies
-target_cluster0_freqs = [614400, 883200, 1094400, 1382400, 1536000, 1728000, 18432000]
-target_cluster1_freqs = [614400, 883200, 1094400, 1382400, 1536000, 1728000, 18432000]
+target_cluster0_freqs = [614400, 883200, 1094400, 1382400, 1536000, 1728000, 1843200]
+target_cluster1_freqs = [614400, 883200, 1094400, 1382400, 1536000, 1728000, 1843200]
 
 # Source frequencies
 src_cluster0_freqs = [614400, 883200, 1036800, 1363200, 1536000, 1670400, 1804800]
