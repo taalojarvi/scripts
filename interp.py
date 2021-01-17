@@ -11,17 +11,17 @@ from scipy import interpolate
 # P.S.: The default source values are from sdm632
 
 # Target frequencies
-target_cluster0_freqs = [614400, 883200, 1094400, 1382400, 1536000, 1728000, 1843200]
-target_cluster1_freqs = [614400, 883200, 1094400, 1382400, 1536000, 1728000, 1843200]
+target_cluster0_freqs = [787200, 1113600, 1344000, 1516800, 1670400, 1881600, 2016000, 2150400, 2308000]
+target_cluster1_freqs = [787200, 1113600, 1344000, 1516800, 1670400, 1881600, 2016000, 2150400, 2308000]
 
 # Source frequencies
-src_cluster0_freqs = [614400, 883200, 1036800, 1363200, 1536000, 1670400, 1804800]
-src_cluster1_freqs = [614400, 883200, 1036800, 1363200, 1536000, 1670400, 1804800]
+src_cluster0_freqs = [633600, 902400, 1113600, 1401600, 1536000, 1747200, 1843200,]
+src_cluster1_freqs = [633600, 902400, 1113600, 1401600, 1536000, 1747200, 1843200,]
 # Source costs
-src_core0_costs = [23, 41, 56, 88, 112, 151, 194]
-src_core1_costs = [23, 41, 56, 88, 112, 151, 194]
-src_cluster0_costs = [4, 5, 7, 9, 9, 11, 13]
-src_cluster1_costs = [4, 5, 7, 9, 9, 11, 13]
+src_core0_costs = [24, 43, 64, 92, 112, 176, 206]
+src_core1_costs = [24, 43, 64, 92, 112, 176, 206]
+src_cluster0_costs = [8, 14, 20, 29, 35, 49, 57]
+src_cluster1_costs = [8, 14, 20, 29, 35, 49, 57]
 
 # Interpolate
 def interp(src_freqs, src_costs, target_freqs):
