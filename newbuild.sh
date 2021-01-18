@@ -55,30 +55,33 @@ function make_releasenotes()  {
 	echo -e "Build Date: "$DATE >> releasenotes.md
 	echo -e >> releasenotes.md
 	echo -e "Last 5 Commits before Build:-" >> releasenotes.md
-	git log --decorate=auto --pretty=reference --graph -n 10 >> releasenotes.md
+	git log --decorate=auto --pretty=format:'%C(yellow)%d%Creset %s %C(bold blue)<%an>%Creset %n' --graph -n 10 >> releasenotes.md
 	cp releasenotes.md $BASE_DIR/Stratosphere-Canaries
 }
 
 # Make defconfig
 function make_defconfig()  {
+	echo -e " "
 	make $DEFCONFIG CC=clang O=$OUTPUT
 }
 
 # Make Kernel
 function make_kernel  {
+	echo -e "$cyan"
 	make -j$(nproc --all) CC='ccache clang  -Qunused-arguments -fcolor-diagnostics' O=$OUTPUT
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
  		then
-    		echo -e "An error has occured during compilation. Please check your code."
+    		echo -e "$red An error has occured during compilation. Please check your code. $cyan"
     		exit 1
     	else
-    		echo -e "Kernel built succesfully!"
+    		echo -e "$red Kernel built succesfully! $cyan"
   	fi 
 }
 
 # Make Flashable Zip
 function make_package()  {
+	echo -e " "
 	cp $KERNEL_IMG $ANYKERNEL_DIR
 	cd $ANYKERNEL_DIR
 	zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip
@@ -90,43 +93,55 @@ function make_package()  {
 
 # Upload Flashable Zip to GitHub Releases <3
 function release()  {
-cd $UPLOAD_DIR
-gh release create pr-$DATE $FINAL_ZIP -F releasenotes.md -p -t "Stratosphere Kernel: Personal Build"
-cd $KERNEL_DIR
+	echo -e " "
+	cd $UPLOAD_DIR
+	gh release create pr-$DATE $FINAL_ZIP -F releasenotes.md -p -t "Stratosphere Kernel: Personal Machine Build"
+	cd $KERNEL_DIR
 }
 
 # Make Clean
 function make_cleanup()  {
-
+	echo -e " "
 	make clean CC=clang O=$OUTPUT
 	make mrproper CC=clang O=$OUTPUT
 }
 
 # Check for Script Artifacts from previous builds
 function artifact_check()  {
+	echo -e " "
 	if [ -f $ANYKERNEL_DIR/*.zip ]; then
+		 echo -e "$red Deleting artifacts! $cyan"
 		 rm $ANYKERNEL_DIR/*.zip
 	else
-		echo -e "Script did not find stale packages. Skipping!"
+		echo -e "$red Script did not find stale packages $cyan"
 	fi
 	
 	if [ -f "$ANYKERNEL_DIR/releasenotes.md" ]; then
+		echo -e "$red Deleting Artifacts! $cyan"	
 		rm $ANYKERNEL_DIR/releasenotes.md
-	elif [ -f "$KERNEL_DIR/releasenotes.md" ]; then
+	else
+		echo -e "$red Script did not find artifacts in $ANYKERNEL_DIR $cyan"
+	fi
+	
+	
+	if [ -f "$KERNEL_DIR/releasenotes.md" ]; then
+		echo -e "$red Deleting Artifacts! $cyan"
 		rm $KERNEL_DIR/releasenotes.md	
 	else
-		echo -e "No Script Artifacts found. Skipping!"
+		echo -e "$red Script did not find artifacts in $KERNEL_DIR. $cyan"
 	fi
 	
 	if [ -f "$ANYKERNEL_DIR/Image.gz-dtb" ]; then
+		echo -e "$red Deleting Artifacts! $cyan"
 		rm $ANYKERNEL_DIR/Image.gz-dtb
 	else
-		echo -e "No stale Kernel Image found. Skipping"
+		echo -e "$red Script did not find stale Kernel Image $cyan"
 	fi
 }
 
 # Update Toolchain Repository
 function update_repo()  {
+	echo -e " "
 	cd $TC_DIR
 	git pull origin
 	cd $KERNEL_DIR
@@ -134,16 +149,19 @@ function update_repo()  {
 
 # Open Menuconfig
 function make_menuconfig()  {
+	echo -e " "
 	make menuconfig CC=clang O=$OUTPUT
 }
 
 # Clear CCACHE
 function clear_ccache  {
+	echo -e " "
 	ccache -Cz
 }
 
 # Regenerate Defconfig
 function regen_defconfig()  {
+	echo -e " "
 	cp $OUTPUT/.config $KERNEL_DIR/arch/arm64/configs/$DEFCONFIG
 	git add arch/arm64/configs/$DEFCONFIG
 	git commit
@@ -152,7 +170,11 @@ function regen_defconfig()  {
 # Menu
 function menu()  {
 	clear
-	echo -e "What do you want to do?"
+	echo -e "$blue***********************************************"
+	echo -e "$cyan        Taalojarvi's Quick Access Menu         "
+	echo -e "$blue***********************************************"
+	echo -e ""
+	echo -e "$yellow What do you want to do?"
 	echo -e ""
 	echo -e "1: Build Kernel and Release it to Github"
 	echo -e "2: Build Clean Kernel but do not release it"
@@ -164,11 +186,13 @@ function menu()  {
 	echo -e "8: Regenerate defconfig"
 	echo -e "9: Exit script"
 	echo -e ""
-	echo -e "Awaiting User Input: "
+	echo -e "Awaiting User Input: $red"
 	read choice
 	
 	case $choice in
-		1) echo -e "Building "$KERNEL_NAME "Kernel" 
+		1) echo -e "$cyan***********************************************"
+		   echo -e "        Building "$KERNEL_NAME "Kernel         "
+		   echo -e "***********************************************"
 		   update_repo
 		   make_cleanup
 		   artifact_check
@@ -179,7 +203,9 @@ function menu()  {
 	 	   release
 	 	   artifact_check
 	 	   ;;
-		2) echo -e "Building "$KERNEL_NAME "Kernel" 
+		2) echo -e "$cyan***********************************************"
+		   echo -e "        Building "$KERNEL_NAME "Kernel         "
+		   echo -e "***********************************************"
 		   make_cleanup
 		   artifact_check
 		   make_releasenotes
@@ -188,28 +214,40 @@ function menu()  {
 	 	   make_package 
 	 	   artifact_check
 	 	   ;;
-	 	3) echo -e "Building "$KERNEL_NAME "Kernel" 
+	 	3) echo -e "$cyan***********************************************"
+		   echo -e "        Building "$KERNEL_NAME "Kernel         "
+		   echo -e "***********************************************"
 	 	   make_defconfig
 	 	   make_kernel
 	 	   ;;
-	 	4) echo -e "Opening Menuconfig"
+	 	4) echo -e "$cyan***********************************************"
+		   echo -e "        Opening Menuconfig                          "
+		   echo -e "***********************************************"
 	 	   make_defconfig
 	 	   make_menuconfig
 	 	   menu
 	 	   ;;
-	 	5) echo -e "Generating configuration from defconfig"
+	 	5) echo -e "$cyan***********************************************"
+		   echo -e "        Generating Defconfig                        "
+		   echo -e "***********************************************"
 	 	   make_defconfig
 	 	   menu
 	 	   ;;
-	 	6) echo -e "Cleaning out build artifacts. Please Wait!"
+	 	6) echo -e "$cyan***********************************************"
+		   echo -e "    Cleaning out build artifacts. Please wait       "
+		   echo -e "***********************************************"
 	 	   make_cleanup
 	 	   menu
 	 	   ;;
-	 	7) echo -e "Clearing ccache and resetting stats"
+	 	7) echo -e "$cyan***********************************************"
+		   echo -e "    Clearing CCACHE                            "
+		   echo -e "***********************************************"
 	 	   clear_ccache
 	 	   menu
 	 	   ;;
-	 	8) echo -e "Regenerating defconfig"
+	 	8) echo -e "$cyan***********************************************"
+		   echo -e "    Regenerating defconfig. Please wait        "
+		   echo -e "***********************************************"
 	 	   make_defconfig
 	 	   regen_defconfig
 	 	   menu
