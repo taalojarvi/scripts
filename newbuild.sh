@@ -36,8 +36,8 @@ export ARCH=arm64
 export CROSS_COMPILE=aarch64-linux-gnu-
 export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 export LD_LIBRARY_PATH=$TC_DIR/lib
-export KBUILD_BUILD_USER="Taalojarvi"
-export KBUILD_BUILD_HOST="ASUS-PC"
+export KBUILD_BUILD_USER=$USER
+export KBUILD_BUILD_HOST=$(hostname)
 export USE_HOST_LEX=yes
 export USE_CCACHE=1
 export CCACHE_EXEC=$(command -v ccache)
@@ -55,7 +55,7 @@ function make_releasenotes()  {
 	echo -e "Build Date: "$DATE >> releasenotes.md
 	echo -e >> releasenotes.md
 	echo -e "Last 5 Commits before Build:-" >> releasenotes.md
-	git log --decorate=auto --pretty=format:'%C(yellow)%d%Creset %s %C(bold blue)<%an>%Creset %n' --graph -n 10 >> releasenotes.md
+	git log --decorate=auto --pretty=reference --graph -n 10 >> releasenotes.md
 	cp releasenotes.md $BASE_DIR/Stratosphere-Canaries
 }
 
@@ -67,7 +67,7 @@ function make_defconfig()  {
 
 # Make Kernel
 function make_kernel  {
-	echo -e "$cyan"
+	echo -e " "
 	make -j$(nproc --all) CC='ccache clang  -Qunused-arguments -fcolor-diagnostics' O=$OUTPUT
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
@@ -95,7 +95,7 @@ function make_package()  {
 function release()  {
 	echo -e " "
 	cd $UPLOAD_DIR
-	gh release create pr-$DATE $FINAL_ZIP -F releasenotes.md -p -t "Stratosphere Kernel: Personal Machine Build"
+	gh release create pr-$DATE $FINAL_ZIP -F releasenotes.md -p -t "Stratosphere Kernel: Personal Build"
 	cd $KERNEL_DIR
 }
 
@@ -122,7 +122,6 @@ function artifact_check()  {
 	else
 		echo -e "$red Script did not find artifacts in $ANYKERNEL_DIR $cyan"
 	fi
-	
 	
 	if [ -f "$KERNEL_DIR/releasenotes.md" ]; then
 		echo -e "$red Deleting Artifacts! $cyan"
@@ -170,10 +169,6 @@ function regen_defconfig()  {
 # Menu
 function menu()  {
 	clear
-	echo -e "$blue***********************************************"
-	echo -e "$cyan        Taalojarvi's Quick Access Menu         "
-	echo -e "$blue***********************************************"
-	echo -e ""
 	echo -e "$yellow What do you want to do?"
 	echo -e ""
 	echo -e "1: Build Kernel and Release it to Github"
@@ -186,7 +181,7 @@ function menu()  {
 	echo -e "8: Regenerate defconfig"
 	echo -e "9: Exit script"
 	echo -e ""
-	echo -e "Awaiting User Input: $red"
+	echo -e "Awaiting User Input: "
 	read choice
 	
 	case $choice in
