@@ -1,0 +1,31 @@
+os: linux
+dist: focal
+
+language: c 
+
+cache: ccache
+before_install:
+  - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+  - sudo apt-add-repository https://cli.github.com/packages
+  - sudo apt update
+  - sudo apt install gh
+install:
+  - sudo apt-get install -y subversion tar g++ zlib1g-dev build-essential git hub python time gawk gettext unzip file libssl-dev wget gcc flex bison libz-dev libncurses-dev make 
+
+addons:
+  apt:
+    update: true
+    packages:
+    - lib32z1
+    - libncurses5
+  ssh_known_hosts:
+    - frs.sourceforge.net
+    - 216.105.38.21
+sudo: false
+
+env:
+  global:
+    - MAKEFLAGS="-j16"
+    - 
+script:
+  - bash travis.sh
