@@ -7,12 +7,12 @@ cyan='\033[0;36m'
 yellow='\033[0;33m'
 red='\033[0;31m'
 nocol='\033[0m'
+DIVIDER="$blue***********************************************$nocol"
 
 # Kernel details
 KERNEL_NAME="Stratosphere"
 VERSION="Kernel"
 DATE=$(date +"%d-%m-%Y-%I-%M")
-DEVICE="NOKIA_SDM660"
 FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
 DEFCONFIG=stratosphere_defconfig
 
@@ -41,12 +41,14 @@ export KBUILD_BUILD_HOST=$(hostname)
 export USE_HOST_LEX=yes
 export USE_CCACHE=1
 export CCACHE_EXEC=$(command -v ccache)
+export RELEASE_TAG=earlyaccess-$DATE
+
 
 
 # Create Release Notes
 function make_releasenotes()  {
 	touch releasenotes.md
-	echo -e "This is a Personal Build of "$KERNEL_NAME" Kernel. Flash at your own risk!" >> releasenotes.md
+	echo -e "This is an Early Access Build of "$KERNEL_NAME" Kernel. Flash at your own risk!" >> releasenotes.md
 	echo -e >> releasenotes.md
 	echo -e "Build Information" >> releasenotes.md
 	echo -e >> releasenotes.md
@@ -55,7 +57,7 @@ function make_releasenotes()  {
 	echo -e "Build Date: "$DATE >> releasenotes.md
 	echo -e >> releasenotes.md
 	echo -e "Last 5 Commits before Build:-" >> releasenotes.md
-	git log --decorate=auto --pretty=reference --graph -n 10 >> releasenotes.md
+	git log --decorate=auto --pretty=format:'%C(yellow)%d%Creset %s %C(bold blue)<%an>%Creset %n' --graph -n 10 >> releasenotes.md
 	cp releasenotes.md $BASE_DIR/Stratosphere-Canaries
 }
 
@@ -95,12 +97,15 @@ function make_package()  {
 function release()  {
 	echo -e " "
 	cd $UPLOAD_DIR
-	gh release create pr-$DATE $FINAL_ZIP -F releasenotes.md -p -t "Stratosphere Kernel: Personal Build"
+	gh release create $RELEASE_TAG $FINAL_ZIP -F releasenotes.md -p -t "Stratosphere Kernel: Personal Build"
 	cd $KERNEL_DIR
 }
 
 # Make Clean
 function make_cleanup()  {
+	echo -e $DIVIDER
+	echo -e "$cyan    Cleaning out build artifacts. Please wait       "
+	echo -e $DIVIDER
 	echo -e " "
 	make clean CC=clang O=$OUTPUT
 	make mrproper CC=clang O=$OUTPUT
@@ -161,9 +166,8 @@ function clear_ccache  {
 # Regenerate Defconfig
 function regen_defconfig()  {
 	echo -e " "
-	cp $OUTPUT/.config $KERNEL_DIR/arch/arm64/configs/$DEFCONFIG
-	git add arch/arm64/configs/$DEFCONFIG
-	git commit
+	cp $OUTPUT/.config $KERNEL_DIR/arch/arm64/configs/$DEFCONFIG 
+	git commit arch/arm64/configs/$DEFCONFIG
 }
 	
 # Menu
@@ -181,13 +185,13 @@ function menu()  {
 	echo -e "8: Regenerate defconfig"
 	echo -e "9: Exit script"
 	echo -e ""
-	echo -e "Awaiting User Input: "
+	echo -e "Awaiting User Input: $red"
 	read choice
 	
 	case $choice in
-		1) echo -e "$cyan***********************************************"
-		   echo -e "        Building "$KERNEL_NAME "Kernel         "
-		   echo -e "***********************************************"
+		1) echo -e $DIVIDER
+		   echo -e "$cyan        Building "$KERNEL_NAME "Kernel         "
+		   echo -e $DIVIDER
 		   update_repo
 		   make_cleanup
 		   artifact_check
@@ -198,9 +202,9 @@ function menu()  {
 	 	   release
 	 	   artifact_check
 	 	   ;;
-		2) echo -e "$cyan***********************************************"
-		   echo -e "        Building "$KERNEL_NAME "Kernel         "
-		   echo -e "***********************************************"
+		2) echo -e $DIVIDER
+		   echo -e "$cyan        Building "$KERNEL_NAME "Kernel         "
+		   echo -e $DIVIDER
 		   make_cleanup
 		   artifact_check
 		   make_releasenotes
@@ -209,45 +213,42 @@ function menu()  {
 	 	   make_package 
 	 	   artifact_check
 	 	   ;;
-	 	3) echo -e "$cyan***********************************************"
-		   echo -e "        Building "$KERNEL_NAME "Kernel         "
-		   echo -e "***********************************************"
+	 	3) echo -e $DIVIDER
+		   echo -e "$cyan        Building "$KERNEL_NAME "Kernel         "
+		   echo -e $DIVIDER
 	 	   make_defconfig
 	 	   make_kernel
 	 	   ;;
-	 	4) echo -e "$cyan***********************************************"
-		   echo -e "        Opening Menuconfig                          "
-		   echo -e "***********************************************"
+	 	4) echo -e $DIVIDER
+		   echo -e "$cyan        Opening Menuconfig                          "
+		   echo -e $DIVIDER
 	 	   make_defconfig
 	 	   make_menuconfig
 	 	   menu
 	 	   ;;
-	 	5) echo -e "$cyan***********************************************"
-		   echo -e "        Generating Defconfig                        "
-		   echo -e "***********************************************"
+	 	5) echo -e $DIVIDER
+		   echo -e "$cyan        Generating Defconfig                        "
+		   echo -e $DIVIDER
 	 	   make_defconfig
 	 	   menu
 	 	   ;;
-	 	6) echo -e "$cyan***********************************************"
-		   echo -e "    Cleaning out build artifacts. Please wait       "
-		   echo -e "***********************************************"
-	 	   make_cleanup
+	 	6) make_cleanup
 	 	   menu
 	 	   ;;
-	 	7) echo -e "$cyan***********************************************"
-		   echo -e "    Clearing CCACHE                            "
-		   echo -e "***********************************************"
+	 	7) echo -e $DIVIDER
+		   echo -e "$cyan    Clearing CCACHE                            "
+		   echo -e $DIVIDER
 	 	   clear_ccache
 	 	   menu
 	 	   ;;
-	 	8) echo -e "$cyan***********************************************"
-		   echo -e "    Regenerating defconfig. Please wait        "
-		   echo -e "***********************************************"
+	 	8) echo -e $DIVIDER
+		   echo -e "$cyan    Regenerating defconfig. Please wait        "
+		   echo -e $DIVIDER
 	 	   make_defconfig
 	 	   regen_defconfig
 	 	   menu
 	 	   ;;
-	 	9) echo -e "Exiting"
+	 	9) echo -e "$red Exiting"
 	 	   clear
 	 	   ;; 
 	 	   
