@@ -1,8 +1,15 @@
 #!/bin/bash -e
-# Author: Taalojarvi
+#
+# Odds and Ends for Android Kernel Building Script 
+# Copyright 2021 Karthik Sreedevan <taalojarvi@github.com>
+# Based on @TheImpulson's FireKernel Buildscript with a few additions and fixes of my own
+#
+# If you modify this script to suit  your needs, add your authorship info in the following format
+# Portions Copyight <YEAR> <NAME> <EMAIL>
+#
 BUILD_START=$(date +"%s")
 
-# Colours
+# Colours and Graphics
 blue='\033[0;34m'
 cyan='\033[0;36m'
 yellow='\033[0;33m'
@@ -13,7 +20,7 @@ DIVIDER="$blue***********************************************$nocol"
 # Kernel details
 KERNEL_NAME="Stratosphere"
 VERSION="Kernel"
-RELEASE_MSG= "Stratosphere Kernel: Personal Machine Build
+RELEASE_MSG= "Stratosphere Kernel: Personal Machine Build"
 DATE=$(date +"%d-%m-%Y-%I-%M")
 FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
 DEFCONFIG=stratosphere_defconfig
@@ -31,8 +38,8 @@ LOG_DIR=$BASE_DIR/logs
 
 
 # Export Environment Variables
-# export PATH="$TC_DIR/bin:$PATH"
-PATH="$TC_DIR/bin:$HOME/linaro-gcc/bin${PATH}"
+export PATH="$TC_DIR/bin:$PATH"
+# PATH="$TC_DIR/bin:$HOME/linaro-gcc/bin${PATH}"
 export CLANG_TRIPLE="aarch64-linux-gnu-"
 export ARCH=arm64
 export CROSS_COMPILE=aarch64-linux-gnu-
