@@ -127,7 +127,7 @@ function make_defconfig()  {
 # Make Kernel
 function make_kernel  {
 	echo -e " "
-	make -j$(nproc --all) CC='ccache clang  -Qunused-arguments -fcolor-diagnostics' O=$OUTPUT
+	make -j$(nproc --all) CC='ccache clang  -Qunused-arguments -fcolor-diagnostics' O=$OUTPUT | tee $LOG_DIR/$DATE.log
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
  		then
