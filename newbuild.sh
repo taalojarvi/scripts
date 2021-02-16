@@ -33,10 +33,13 @@ KERNEL_DIR=$(pwd)
 ANYKERNEL_DIR=$BASE_DIR/AnyKernel3
 UPLOAD_DIR=$BASE_DIR/Stratosphere-Canaries
 TC_DIR=$BASE_DIR/proton-clang
+LOG_DIR=$BASE_DIR/logs
+
+# You need not edit the next three
 RELEASE_NOTES=$UPLOAD_DIR/releasenotes.md
 OUTPUT=$BASE_DIR/output
 KERNEL_IMG=$OUTPUT/arch/arm64/boot/Image.gz-dtb
-LOG_DIR=$BASE_DIR/logs
+
 
 
 # Export Environment Variables
@@ -115,7 +118,7 @@ function make_releasenotes()  {
 	echo -e >> releasenotes.md
 	echo -e "Last 5 Commits before Build:-" >> releasenotes.md
 	git log --decorate=auto --pretty=format:'%C(yellow)%d%Creset %s %C(bold blue)<%an>%Creset %n' --graph -n 10 >> releasenotes.md
-	cp releasenotes.md $UPLOAD_DIR
+	cp releasenotes.md $RELEASE_NOTES
 }
 
 # Make defconfig
