@@ -2,6 +2,7 @@
 #
 # Odds and Ends for Android Kernel Building Script 
 # Copyright 2021 Karthik Sreedevan <taalojarvi@github.com>
+# Portions copyright Aayush Gupta <TheImpulson@github.com.
 # Based on @TheImpulson's FireKernel Buildscript with a few additions and fixes of my own
 #
 # If you modify this script to suit  your needs, add your authorship info in the following format
@@ -15,12 +16,13 @@ cyan='\033[0;36m'
 yellow='\033[0;33m'
 red='\033[0;31m'
 nocol='\033[0m'
+green='\e[32mGreen'
 DIVIDER="$blue***********************************************$nocol"
 
 # Kernel details
 KERNEL_NAME="Stratosphere"
 VERSION="Kernel"
-RELEASE_MSG= "Stratosphere Kernel: Personal Machine Build"
+RELEASE_MSG="Stratosphere Kernel: Personal Machine Build"
 DATE=$(date +"%d-%m-%Y-%I-%M")
 FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
 DEFCONFIG=stratosphere_defconfig
@@ -52,10 +54,54 @@ export USE_CCACHE=1
 export CCACHE_EXEC=$(command -v ccache)
 export RELEASE_TAG=earlyaccess-$DATE
 
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!
-# DO NOT EDIT PAST THIS POINT
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# BE CAREFUL EDITING PAST THIS POINT!
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+# Pre-Flight Checks
+function preflight() {
+	printf "\n"
+	printf "$DIVIDER\n"
+	printf "$cyan Checking if Directories are valid\n$nocol"
+	printf "$DIVIDER\n"
+	printf "\n"
+	
+	printf "$cyan Checking Anykernel directory "
+	if [ -d $ANYKERNEL_DIR ]; then
+		printf "<$green SUCCESS $cyan> \n"
+	else
+		printf "<$red FAILED $cyan> \n"
+		printf "$red Please edit script with correct directory! $nocol \n"
+		exit 1 
+	fi
+	
+	printf "$cyan Checking Release Package directory "
+	if [ -d $UPLOAD_DIR ]; then
+		printf "<$green SUCCESS $cyan> \n"
+	else
+		printf "<$red FAILED $cyan> \n"
+		mkdir $UPLOAD_DIR 
+	fi
+	
+	printf "$cyan Checking Logs Directory "
+	if [ -d $UPLOAD_DIR ]; then
+		printf "<$green SUCCESS $cyan> \n"
+	else
+		printf "<$red FAILED $cyan> \n"
+		mkdir $LOG_DIR 
+	fi
+	
+	printf "$cyan Checking Toolchain directory "
+	if [ -d $TC_DIR ]; then
+		printf "<$green SUCCESS $cyan> \n"
+	else
+		printf "<$red FAILED $cyan> \n"
+		printf "$red Please edit script with correct directory $nocol \n" 
+		exit 1
+	fi
+	
+
+}
 # Create Release Notes
 function make_releasenotes()  {
 	touch releasenotes.md
@@ -266,7 +312,7 @@ function menu()  {
 	 esac
 	
 }
-
+preflight
 menu
 BUILD_END=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))
