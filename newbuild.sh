@@ -1,8 +1,8 @@
 #!/bin/bash -e
 #
-# Odds and Ends for Android Kernel Building Script 
+# Odds and Ends for Android Kernel Building 
 # Copyright 2021 Karthik Sreedevan <taalojarvi@github.com>
-# Portions copyright Aayush Gupta <TheImpulson@github.com.
+# Portions Copyright Aayush Gupta <TheImpulson@github.com>
 # Based on @TheImpulson's FireKernel Buildscript with a few additions and fixes of my own
 #
 # If you modify this script to suit  your needs, add your authorship info in the following format
@@ -23,9 +23,12 @@ DIVIDER="$blue***********************************************$nocol"
 KERNEL_NAME="Stratosphere"
 VERSION="Kernel"
 RELEASE_MSG="Stratosphere Kernel: Personal Machine Build"
+DEFCONFIG=stratosphere_defconfig
+# Need not edit these.
 DATE=$(date +"%d-%m-%Y-%I-%M")
 FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
-DEFCONFIG=stratosphere_defconfig
+RELEASE_TAG=earlyaccess-$DATE
+
 
 # Dirs and Files
 BASE_DIR=$HOME
@@ -35,14 +38,14 @@ UPLOAD_DIR=$BASE_DIR/Stratosphere-Canaries
 TC_DIR=$BASE_DIR/proton-clang
 LOG_DIR=$BASE_DIR/logs
 
-# You need not edit the next three
+# Need not bed edited
 RELEASE_NOTES=$UPLOAD_DIR/releasenotes.md
 OUTPUT=$BASE_DIR/output
 KERNEL_IMG=$OUTPUT/arch/arm64/boot/Image.gz-dtb
 
 
 
-# Export Environment Variables
+# Export Environment Variables. 
 export PATH="$TC_DIR/bin:$PATH"
 # PATH="$TC_DIR/bin:$HOME/linaro-gcc/bin${PATH}"
 export CLANG_TRIPLE="aarch64-linux-gnu-"
@@ -50,16 +53,17 @@ export ARCH=arm64
 export CROSS_COMPILE=aarch64-linux-gnu-
 export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 export LD_LIBRARY_PATH=$TC_DIR/lib
+# Need not be edited.
 export KBUILD_BUILD_USER=$USER
 export KBUILD_BUILD_HOST=$(hostname)
 export USE_HOST_LEX=yes
 export USE_CCACHE=1
 export CCACHE_EXEC=$(command -v ccache)
-export RELEASE_TAG=earlyaccess-$DATE
 
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# BE CAREFUL EDITING PAST THIS POINT!
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# !BE CAREFUL EDITING PAST THIS POINT!
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # Pre-Flight Checks
 function preflight() {
