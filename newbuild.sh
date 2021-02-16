@@ -43,7 +43,9 @@ export USE_CCACHE=1
 export CCACHE_EXEC=$(command -v ccache)
 export RELEASE_TAG=earlyaccess-$DATE
 
-
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!
+# DO NOT EDIT PAST THIS POINT
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # Create Release Notes
 function make_releasenotes()  {
