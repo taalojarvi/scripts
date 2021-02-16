@@ -12,6 +12,7 @@ DIVIDER="$blue***********************************************$nocol"
 # Kernel details
 KERNEL_NAME="Stratosphere"
 VERSION="Kernel"
+RELEASE_MSG= "Stratosphere Kernel: Personal Machine Build
 DATE=$(date +"%d-%m-%Y-%I-%M")
 FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
 DEFCONFIG=stratosphere_defconfig
@@ -60,7 +61,7 @@ function make_releasenotes()  {
 	echo -e >> releasenotes.md
 	echo -e "Last 5 Commits before Build:-" >> releasenotes.md
 	git log --decorate=auto --pretty=format:'%C(yellow)%d%Creset %s %C(bold blue)<%an>%Creset %n' --graph -n 10 >> releasenotes.md
-	cp releasenotes.md $BASE_DIR/Stratosphere-Canaries
+	cp releasenotes.md $UPLOAD_DIR
 }
 
 # Make defconfig
@@ -99,7 +100,7 @@ function make_package()  {
 function release()  {
 	echo -e " "
 	cd $UPLOAD_DIR
-	gh release create $RELEASE_TAG $FINAL_ZIP -F releasenotes.md -p -t "Stratosphere Kernel: Personal Build"
+	gh release create $RELEASE_TAG $FINAL_ZIP -F releasenotes.md -p -t $RELEASE_MSG
 	cd $KERNEL_DIR
 }
 
