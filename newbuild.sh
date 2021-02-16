@@ -1,4 +1,5 @@
 #!/bin/bash -e
+# Author: Taalojarvi
 BUILD_START=$(date +"%s")
 
 # Colours
