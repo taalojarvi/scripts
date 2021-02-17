@@ -250,22 +250,33 @@ function make_kernel  {
 
 # Make Flashable Zip
 function make_package()  {
-	echo -e " "
-	cp $KERNEL_IMG $ANYKERNEL_DIR
-	cd $ANYKERNEL_DIR
-	zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip
-	mv UPDATE-AnyKernel2.zip $FINAL_ZIP
-	cp $FINAL_ZIP $UPLOAD_DIR
-	cd $KERNEL_DIR
+	printf "\n"
+	
+	if [ "$PREFS_PACKAGING" = "true" ]; then
+		printf "\n$green Packaging Kernel!"
+		cp $KERNEL_IMG $ANYKERNEL_DIR
+		cd $ANYKERNEL_DIR
+		zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip
+		mv UPDATE-AnyKernel2.zip $FINAL_ZIP
+		cp $FINAL_ZIP $UPLOAD_DIR
+		cd $KERNEL_DIR
+	else
+		printf "\n$red Skipping Packaging!"
+	fi
 	
 }
 
 # Upload Flashable Zip to GitHub Releases <3
 function release()  {
-	echo -e " "
-	cd $UPLOAD_DIR
-	gh release create $RELEASE_TAG $FINAL_ZIP -F releasenotes.md -p -t $RELEASE_MSG
-	cd $KERNEL_DIR
+	printf "\n"
+	if [ "$PREFS_PACKAGING" = "true" ]; then
+		printf "\n$red Releasing Kernel Package to Github!"
+		cd $UPLOAD_DIR
+		gh release create $RELEASE_TAG $FINAL_ZIP -F releasenotes.md -p -t $RELEASE_MSG
+		cd $KERNEL_DIR
+	else
+		printf "\n$red Skipping release!"
+	fi
 }
 
 # Make Clean
