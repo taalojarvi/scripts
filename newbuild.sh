@@ -1,5 +1,5 @@
 #!/bin/bash -e
-#
+# 
 # Odds and Ends for Android Kernel Building 
 # Copyright 2021 Karthik Sreedevan <taalojarvi@github.com>
 # Portions Copyright Aayush Gupta <TheImpulson@github.com>
@@ -16,7 +16,7 @@ cyan='\033[0;36m'
 yellow='\033[0;33m'
 red='\033[0;31m'
 nocol='\033[0m'
-green='\e[32mGreen'
+green='\e[32m'
 DIVIDER="$blue***********************************************$nocol"
 
 # Kernel details
@@ -65,6 +65,24 @@ export CCACHE_EXEC=$(command -v ccache)
 # !BE CAREFUL EDITING PAST THIS POINT!
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+# Check if script is unmodified since last run to reduce Disk I/O with preflight checks
+function check_hash() {
+	if [ ! -a /tmp/kscript.hash ]; then
+		touch /tmp/kscript.hash
+	else
+		printf "$cyan Previous checksum found!$nocol\n"
+	fi
+	printf "$cyan Checking if script has been modified "
+	export CHECKSUM_CURRENT=$(md5sum $(pwd)/$0)
+	export CHECKSUM_FILE=$(cat /tmp/kscript-hash.md)
+	if [ "$CHECKSUM_CURRENT" = "$CHECKSUM_FILE" ]; then
+		printf "$cyan <$green SUCCESS! $cyan>$nocol\n" 
+	else
+		printf "$cyan <$red FAILED! $cyan>$nocol\n" 
+		preflight
+	fi
+}
+
 # Pre-Flight Checks
 function preflight() {
 	printf "\n"
@@ -107,7 +125,13 @@ function preflight() {
 		exit 1
 	fi
 	
-
+	printf "\n"
+	
+	printf "$cyan Generating Hash for Buildscript $nocol\n"
+	rm /tmp/kscript.hash
+	touch /tmp/kscript.hash
+	md5sum $(pwd)/$0 >> /tmp/kscript.hash
+	sleep 1
 }
 # Create Release Notes
 function make_releasenotes()  {
@@ -319,7 +343,7 @@ function menu()  {
 	 esac
 	
 }
-preflight
+check_hash
 menu
 BUILD_END=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))
