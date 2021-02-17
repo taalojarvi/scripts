@@ -74,7 +74,7 @@ function check_hash() {
 	fi
 	printf "$cyan Checking if script has been modified "
 	export CHECKSUM_CURRENT=$(md5sum $(pwd)/$0)
-	export CHECKSUM_FILE=$(cat /tmp/kscript-hash.md)
+	export CHECKSUM_FILE=$(cat /tmp/kscript.hash)
 	if [ "$CHECKSUM_CURRENT" = "$CHECKSUM_FILE" ]; then
 		printf "$cyan <$green SUCCESS! $cyan>$nocol\n" 
 	else
