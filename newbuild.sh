@@ -65,6 +65,34 @@ export CCACHE_EXEC=$(command -v ccache)
 # !BE CAREFUL EDITING PAST THIS POINT!
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+# Load Preferences for Script
+function create_prefs() {
+	printf "\n$cyan Writing default preferences! $nocol\n"
+	mkdir /var/tmp/kscript/
+	touch /var/tmp/kscript/pref.packaging
+	echo true >> /var/tmp/kscript/pref.packaging
+	touch /var/tmp/kscript/pref.ramdisk
+	echo false >> /var/tmp/kscript/pref.ramdisk
+	touch /var/tmp/kscript/kscript.prefs.enabled
+	load_prefs
+}
+
+function load_prefs() {
+
+	printf "\n$cyan Loading Preferences $nocol"
+	if [ -f /var/tmp/kscript/kscript.prefs.enabled ]; then
+		printf "$cyan <$green SUCCESS! $cyan>$nocol\n" 
+		export PREFS_PACKGAGING=$(cat /var/tmp/kscript/pref.packaging)
+		export PREFS_RAMDISK=$(cat /var/tmp/kscript/pref.ramdisk)
+		
+	else
+		printf "$cyan <$red FAILED! $cyan>$nocol\n" 
+		create_prefs
+		sleep 1
+	fi
+
+}
+
 # Check if script is unmodified since last run to reduce Disk I/O with preflight checks
 function check_hash() {
 	if [ ! -a /tmp/kscript.hash ]; then
@@ -343,6 +371,7 @@ function menu()  {
 	 esac
 	
 }
+load_prefs
 check_hash
 menu
 BUILD_END=$(date +"%s")
