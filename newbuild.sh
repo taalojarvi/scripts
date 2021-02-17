@@ -65,7 +65,7 @@ export CCACHE_EXEC=$(command -v ccache)
 # !BE CAREFUL EDITING PAST THIS POINT!
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-# Load Preferences for Script
+# Create default preferences
 function create_prefs() {
 	printf "\n$cyan Writing default preferences! $nocol\n"
 	mkdir /var/tmp/kscript/
@@ -77,12 +77,13 @@ function create_prefs() {
 	load_prefs
 }
 
+# Load Preferences from prop files
 function load_prefs() {
 
 	printf "\n$cyan Loading Preferences $nocol"
 	if [ -f /var/tmp/kscript/kscript.prefs.enabled ]; then
 		printf "$cyan <$green SUCCESS! $cyan>$nocol\n" 
-		export PREFS_PACKGAGING=$(cat /var/tmp/kscript/pref.packaging)
+		export PREFS_PACKAGING=$(cat /var/tmp/kscript/pref.packaging)
 		export PREFS_RAMDISK=$(cat /var/tmp/kscript/pref.ramdisk)
 		
 	else
@@ -91,6 +92,55 @@ function load_prefs() {
 		sleep 1
 	fi
 
+}
+
+# Toggle Preferences and store them on disk
+function toggle_prefs {
+	clear
+	printf "\n$yellow Listing Preferences: "
+	printf "\n"
+	printf "\n$yellow 1. Create Package After Compilation "
+	if [ "$PREFS_PACKAGING" = "true" ]; then
+		printf "$cyan <$green ENABLED $cyan>$nocol\n" 
+	else
+		printf "$cyan <$red DISABLED $cyan>$nocol\n" 
+	fi
+	
+	printf "\n$yellow 2. Use RAMDISK to speedup compilation "
+	if [ "$PREFS_RAMDISK" = "true" ]; then
+		printf "$cyan <$green ENABLED $cyan>$nocol\n" 
+	else
+		printf "$cyan <$red DISABLED $cyan>$nocol\n" 
+	fi
+	printf "\n"
+	printf "\n$yellow 3. Exit to Main Menu"
+	printf "\n"
+	printf "\n$yellow Awaiting User Input: $red"
+	read toggle
+	case $toggle in
+		1) if [ "$PREFS_PACKAGING" = "true" ]; then
+			sed -i "s/true/false/" /var/tmp/kscript/pref.packaging
+			export PREFS_PACKAGING=$(cat /var/tmp/kscript/pref.packaging)
+		   else
+		   	sed -i "s/false/true/" /var/tmp/kscript/pref.packaging
+		   	export PREFS_PACKAGING=$(cat /var/tmp/kscript/pref.packaging)
+		   fi
+		   toggle_prefs
+		   ;;
+		2) if [ "$PREFS_RAMDISK" = "true" ]; then
+			sed -i "s/true/false/" /var/tmp/kscript/pref.ramdisk
+			export PREFS_RAMDISK=$(cat /var/tmp/kscript/pref.ramdisk)
+		   else
+		   	sed -i "s/false/true/" /var/tmp/kscript/pref.ramdisk
+		   	export PREFS_RAMDISK=$(cat /var/tmp/kscript/pref.ramdisk)
+		   fi
+		   toggle_prefs
+		   ;;
+		3) menu
+		   ;;
+		*) menu
+		   ;;
+	esac
 }
 
 # Check if script is unmodified since last run to reduce Disk I/O with preflight checks
@@ -300,7 +350,8 @@ function menu()  {
 	echo -e "6: Cleanup script artifacts"
 	echo -e "7: Clear ccache and reset stats"
 	echo -e "8: Regenerate defconfig"
-	echo -e "9: Exit script"
+	echo -e "9: Toggle Preferences"
+	echo -e "10: Exit to Shell"
 	echo -e ""
 	echo -e "Awaiting User Input: $red"
 	read choice
@@ -365,7 +416,9 @@ function menu()  {
 	 	   regen_defconfig
 	 	   menu
 	 	   ;;
-	 	9) echo -e "$red Exiting"
+	 	9) toggle_prefs
+	 	   ;;
+	 	10) echo -e "$red Exiting"
 	 	   clear
 	 	   ;; 
 	 	   
