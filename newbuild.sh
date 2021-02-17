@@ -38,7 +38,7 @@ UPLOAD_DIR=$BASE_DIR/Stratosphere-Canaries
 TC_DIR=$BASE_DIR/proton-clang
 LOG_DIR=$BASE_DIR/logs
 
-# Need not bed edited
+# Need not be edited
 RELEASE_NOTES=$UPLOAD_DIR/releasenotes.md
 OUTPUT=$BASE_DIR/output
 KERNEL_IMG=$OUTPUT/arch/arm64/boot/Image.gz-dtb
@@ -95,7 +95,8 @@ function load_prefs() {
 
 # Check if script is unmodified since last run to reduce Disk I/O with preflight checks
 function check_hash() {
-	if [ ! -a /tmp/kscript.hash ]; then
+	if [ ! -f /tmp/kscript.hash ]; then
+		printf "\n$cyan Checksum file not found. Creating!$nocol\n"
 		touch /tmp/kscript.hash
 	else
 		printf "$cyan Previous checksum found!$nocol\n"
