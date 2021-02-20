@@ -69,11 +69,17 @@ export CCACHE_EXEC=$(command -v ccache)
 function create_prefs() {
 	printf "\n$cyan Writing default preferences! $nocol\n"
 	mkdir /var/tmp/kscript/
+	touch /var/tmp/kscript/kscript.prefs.enabled
+	echo 100 >> /var/tmp/kscript/kscript.prefs.enabled
 	touch /var/tmp/kscript/pref.packaging
 	echo true >> /var/tmp/kscript/pref.packaging
 	touch /var/tmp/kscript/pref.ramdisk
 	echo false >> /var/tmp/kscript/pref.ramdisk
-	touch /var/tmp/kscript/kscript.prefs.enabled
+	touch /var/tmp/kscript/pref.kuser
+	echo $KBUILD_BUILD_USER >> /var/tmp/kscript/pref.kuser
+	touch /var/tmp/kscript/pref.hostname
+	echo $KBUILD_BUILD_HOST >> /var/tmp/kscript/pref.hostname
+	
 	load_prefs
 }
 
@@ -82,9 +88,19 @@ function load_prefs() {
 
 	printf "\n$cyan Loading Preferences $nocol"
 	if [ -f /var/tmp/kscript/kscript.prefs.enabled ]; then
-		printf "$cyan <$green SUCCESS! $cyan>$nocol\n" 
-		export PREFS_PACKAGING=$(cat /var/tmp/kscript/pref.packaging)
-		export PREFS_RAMDISK=$(cat /var/tmp/kscript/pref.ramdisk)
+			if [ "$(cat /var/tmp/kscript/kscript.prefs.enabled)" = "100" ];then
+				printf "$cyan <$green SUCCESS! $cyan>$nocol\n" 
+				export PREFS_PACKAGING=$(cat /var/tmp/kscript/pref.packaging)
+				export PREFS_RAMDISK=$(cat /var/tmp/kscript/pref.ramdisk)
+				export KBUILD_BUILD_USER=$(cat /var/tmp/kscript/pref.kuser)
+				export KBUILD_BUILD_HOST=$(cat /var/tmp/kscript/pref.hostname)
+			else 
+				printf "$cyan <$red FAILED! $cyan>$nocol\n" 
+				printf "\n$red Preferences are outdated! Regenerating!"
+				sleep 5
+				rm -rf /var/tmp/kscript/
+				create_prefs
+			fi
 		
 	else
 		printf "$cyan <$red FAILED! $cyan>$nocol\n" 
@@ -112,8 +128,14 @@ function toggle_prefs {
 	else
 		printf "$cyan <$red DISABLED $cyan>$nocol\n" 
 	fi
+	
+	printf "\n$yellow 3. Set Custom Build Username "
+	printf "$cyan <$green $KBUILD_BUILD_USER $cyan>$nocol\n"
+	printf "\n$yellow 4. Set Custom Build Hostname "
+	printf "$cyan <$green $KBUILD_BUILD_HOST $cyan>$nocol\n"  
+	
 	printf "\n"
-	printf "\n$yellow 3. Exit to Main Menu"
+	printf "\n$yellow 5. Exit to Main Menu"
 	printf "\n"
 	printf "\n$yellow Awaiting User Input: $red"
 	read toggle
@@ -136,7 +158,33 @@ function toggle_prefs {
 		   fi
 		   toggle_prefs
 		   ;;
-		3) menu
+		3) printf "\n"
+		   printf "\n$yellow Enter new username: $red"
+		   read newuser
+		   printf "\n"
+		   if [ "$newuser" = "" ]; then
+		   	printf "\n$red Username cannot be empty!\n"
+		   	toggle_prefs
+		   else
+		   	sed -i "s/$KBUILD_BUILD_USER/$newuser/" /var/tmp/kscript/pref.kuser
+		   	export KBUILD_BUILD_USER=$(cat /var/tmp/kscript/pref.kuser)
+		   	toggle_prefs 
+		   fi
+		   ;;
+		4) printf "\n"
+		   printf "\n$yellow Enter new hostname: $red"
+		   read newhost
+		   printf "\n"
+		   if [ "$newhost" = "" ]; then
+		   	printf "\n$red Hostname cannot be empty!\n"
+		   	toggle_prefs
+		   else
+		   	sed -i "s/$KBUILD_BUILD_HOST/$newhost/" /var/tmp/kscript/pref.hostname
+		   	export KBUILD_BUILD_HOST=$(cat /var/tmp/kscript/pref.hostname)
+		   	toggle_prefs 
+		   fi
+		   ;;
+		5) menu
 		   ;;
 		*) menu
 		   ;;
@@ -237,7 +285,7 @@ function make_defconfig()  {
 # Make Kernel
 function make_kernel  {
 	echo -e " "
-	make -j$(nproc --all) CC='ccache clang  -Qunused-arguments -fcolor-diagnostics' O=$OUTPUT | tee $LOG_DIR/$DATE.log
+	make -j$(nproc --all) CC='ccache clang  -Qunused-arguments -fcolor-diagnostics' O=$OUTPUT 
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
  		then
