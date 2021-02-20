@@ -272,7 +272,7 @@ function release()  {
 	if [ "$PREFS_PACKAGING" = "true" ]; then
 		printf "\n$red Releasing Kernel Package to Github!"
 		cd $UPLOAD_DIR
-		gh release create $RELEASE_TAG $FINAL_ZIP -F releasenotes.md -p -t $RELEASE_MSG
+		gh release create "$RELEASE_TAG" "$FINAL_ZIP" -F releasenotes.md -p -t "$RELEASE_MSG"
 		cd $KERNEL_DIR
 	else
 		printf "\n$red Skipping release!"
