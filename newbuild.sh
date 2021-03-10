@@ -48,7 +48,7 @@ KERNEL_IMG=$OUTPUT/arch/arm64/boot/Image.gz-dtb
 # Export Environment Variables. 
 export PATH="$TC_DIR/bin:$PATH"
 # PATH="$TC_DIR/bin:$HOME/linaro-gcc/bin${PATH}"
-export CLANG_TRIPLE="aarch64-linux-gnu-"
+export CLANG_TRIPLE=aarch64-linux-gnu-
 export ARCH=arm64
 export CROSS_COMPILE=aarch64-linux-gnu-
 export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
@@ -285,7 +285,7 @@ function make_defconfig()  {
 # Make Kernel
 function make_kernel  {
 	echo -e " "
-	make -j$(nproc --all) CC='ccache clang  -Qunused-arguments -fcolor-diagnostics' O=$OUTPUT 
+	make -j$(nproc --all) CC='ccache clang  -Qunused-arguments -fcolor-diagnostics' AR=llvm-ar NM=llvm-nm STRIP=llvm-strip LD=ld.lld O=$OUTPUT 
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
  		then
