@@ -1,0 +1,27 @@
+version: 2.1
+jobs:
+  compile:
+    machine:
+      image: ubuntu-2004:202010-01 # recommended linux image
+    steps:
+      - run:
+          name: Installing Github-CLI
+          command: |
+             sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+             sudo apt-add-repository https://cli.github.com/packages
+             sudo apt update
+             sudo apt-get --assume-yes install gh
+      - run:
+          name: Building Stratosphere Kernel
+          command: |
+           git config --global user.name "taalojarvi"
+           git config --global user.email "sreedevan05@gmail.com"
+           git config --global color.ui false
+           git clone --depth=1 https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -b ${CIRCLE_BRANCH} .
+           bash .circleci/build.sh
+workflows:
+  version: 2.1
+  cooking:
+    jobs:
+      - compile
+
