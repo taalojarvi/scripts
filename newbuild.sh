@@ -70,7 +70,7 @@ function create_prefs() {
 	printf "\n$cyan Writing default preferences! $nocol\n"
 	mkdir /var/tmp/kscript/
 	touch /var/tmp/kscript/kscript.prefs.enabled
-	echo 103 >> /var/tmp/kscript/kscript.prefs.enabled
+	echo 105 >> /var/tmp/kscript/kscript.prefs.enabled
 	touch /var/tmp/kscript/pref.packaging
 	echo false >> /var/tmp/kscript/pref.packaging
 	touch /var/tmp/kscript/pref.ramdisk
@@ -83,6 +83,8 @@ function create_prefs() {
 	echo clean >> /var/tmp/kscript/pref.buildtype
 	touch /var/tmp/kscript/pref.release
 	echo false >> /var/tmp/kscript/pref.release
+	touch /var/tmp/kscript/pref.updaterepo
+	echo false >> /var/tmp/kscript/pref.updaterepo
 	
 	load_prefs
 }
@@ -92,7 +94,7 @@ function load_prefs() {
 
 	printf "\n$cyan Loading Preferences $nocol"
 	if [ -f /var/tmp/kscript/kscript.prefs.enabled ]; then
-			if [ "$(cat /var/tmp/kscript/kscript.prefs.enabled)" = "103" ];then
+			if [ "$(cat /var/tmp/kscript/kscript.prefs.enabled)" = "105" ];then
 				printf "$cyan <$green SUCCESS! $cyan>$nocol\n" 
 				export PREFS_PACKAGING=$(cat /var/tmp/kscript/pref.packaging)
 				export PREFS_RAMDISK=$(cat /var/tmp/kscript/pref.ramdisk)
@@ -100,6 +102,7 @@ function load_prefs() {
 				export KBUILD_BUILD_HOST=$(cat /var/tmp/kscript/pref.hostname)
 				export PREFS_BUILDTYPE=$(cat /var/tmp/kscript/pref.buildtype)
 				export PREFS_RELEASE=$(cat /var/tmp/kscript/pref.release)
+				export PREFS_UPDATEREPO=$(cat /var/tmp/kscript/pref.updaterepo)
 			else 
 				printf "$cyan <$red FAILED! $cyan>$nocol\n" 
 				printf "\n$red Preferences are outdated! Regenerating!"
@@ -119,6 +122,7 @@ function toggle_prefs {
 	clear
 	printf "\n$yellow Listing Preferences: "
 	printf "\n"
+	
 	printf "\n$yellow 1. Create Package After Compilation "
 	if [ "$PREFS_PACKAGING" = "true" ]; then
 		printf "$cyan <$green ENABLED $cyan>$nocol\n" 
@@ -133,27 +137,36 @@ function toggle_prefs {
 		printf "$cyan <$red DISABLED $cyan>$nocol\n" 
 	fi
 	
-	printf "\n$yellow 3. Release Package to Github "
+	printf "\n$yellow 3. Update AK and TC Repos before Compilation"
+	if [ "$PREFS_UPDATEREPO" = "true" ]; then
+		printf "$cyan <$green ENABLED $cyan>$nocol\n" 
+	else
+		printf "$cyan <$red DISABLED $cyan>$nocol\n" 
+	fi
+	
+	printf "\n$yellow 4. Release Package to Github "
 	if [ "$PREFS_RELEASE" = "true" ]; then
 		printf "$cyan <$green ENABLED $cyan>$nocol\n" 
 	else
 		printf "$cyan <$red DISABLED $cyan>$nocol\n" 
 	fi
 	
-	printf "\n$yellow 4. Toggle Build Type "
+	
+	
+	printf "\n$yellow 5. Toggle Build Type "
 	if [ "$PREFS_BUILDTYPE" = "clean" ]; then
 		printf "$cyan <$green CLEAN $cyan>$nocol\n" 
 	else
 		printf "$cyan <$red DIRTY $cyan>$nocol\n" 
 	fi
 	
-	printf "\n$yellow 5. Set Custom Build Username "
+	printf "\n$yellow 6. Set Custom Build Username "
 	printf "$cyan <$green $KBUILD_BUILD_USER $cyan>$nocol\n"
-	printf "\n$yellow 6. Set Custom Build Hostname "
+	printf "\n$yellow 7. Set Custom Build Hostname "
 	printf "$cyan <$green $KBUILD_BUILD_HOST $cyan>$nocol\n"  
 	
 	printf "\n"
-	printf "\n$yellow 7. Exit to Main Menu"
+	printf "\n$yellow 8. Exit to Main Menu"
 	printf "\n"
 	printf "\n$yellow Awaiting User Input: $red"
 	read toggle
@@ -178,7 +191,16 @@ function toggle_prefs {
 		   fi
 		   toggle_prefs
 		   ;;
-		3) if [ "$PREFS_RELEASE" = "true" ]; then
+		3) if [ "$PREFS_UPDATEREPO" = "true" ]; then
+			sed -i "s/true/false/" /var/tmp/kscript/pref.updaterepo
+			export PREFS_UPDATEREPO=$(cat /var/tmp/kscript/pref.updaterepo)
+		   else
+		   	sed -i "s/false/true/" /var/tmp/kscript/pref.updaterepo
+		   	export PREFS_UPDATEREPO=$(cat /var/tmp/kscript/pref.updaterepo)
+		   fi
+		   toggle_prefs
+		   ;;
+		4) if [ "$PREFS_RELEASE" = "true" ]; then
 			sed -i "s/true/false/" /var/tmp/kscript/pref.release
 			export PREFS_RELEASE=$(cat /var/tmp/kscript/pref.release)
 		   else
@@ -190,7 +212,7 @@ function toggle_prefs {
 		   fi
 		   toggle_prefs
 		   ;;
-		4) if [ "$PREFS_BUILDTYPE" = "clean" ]; then
+		5) if [ "$PREFS_BUILDTYPE" = "clean" ]; then
 			sed -i "s/clean/dirty/" /var/tmp/kscript/pref.buildtype
 			export PREFS_BUILDTYPE=$(cat /var/tmp/kscript/pref.buildtype)
 		   else
@@ -199,7 +221,7 @@ function toggle_prefs {
 		   fi
 		   toggle_prefs
 		   ;;
-		5) printf "\n"
+		6) printf "\n"
 		   printf "\n$yellow Enter new username: $red"
 		   read newuser
 		   printf "\n"
@@ -212,7 +234,7 @@ function toggle_prefs {
 		   	toggle_prefs 
 		   fi
 		   ;;
-		6) printf "\n"
+		7) printf "\n"
 		   printf "\n$yellow Enter new hostname: $red"
 		   read newhost
 		   printf "\n"
@@ -225,7 +247,7 @@ function toggle_prefs {
 		   	toggle_prefs 
 		   fi
 		   ;;
-		7) menu
+		8) menu
 		   ;;
 		*) menu
 		   ;;
@@ -404,6 +426,8 @@ function update_repo()  {
 	echo -e " "
 	cd $TC_DIR
 	git pull origin
+	cd $ANYKERNEL_DIR
+	git pull https://github.com/osm0sis/AnyKernel3 master
 	cd $KERNEL_DIR
 }
 
@@ -446,29 +470,33 @@ function menu()  {
 		1) echo -e $DIVIDER
 		   echo -e "$cyan        Building "$KERNEL_NAME "Kernel         "
 		   echo -e $DIVIDER
-		   update_repo
+		   if [ "$PREFS_UPDATEREPO" = "clean" ]; then
+		   	update_repo
+		   else
+		   	printf "\n$red Skipping Repo Updation$cyan"
+		   fi
 		   if [ "$PREFS_BUILDTYPE" = "clean" ]; then
 		   	make_cleanup
 		   else
-		   	printf "\n$red Skipping Cleanup"
+		   	printf "\n$red Skipping Cleanup$cyan"
 		   fi
 		   artifact_check
 		   if [ "$PREFS_RELEASE" = "true" ]; then
 		   	make_releasenotes
 		   else
-		   	printf "\n$red Skipping Changelog Generation"
+		   	printf "\n$red Skipping Changelog Generation$cyan"
 		   fi
 		   make_defconfig
 	 	   make_kernel
 	 	   if [ "$PREFS_PACKAGING" = "true" ]; then
 		   	make_package
 		   else
-		   	printf "\n$red Skipping Packaging"
+		   	printf "\n$red Skipping Packaging$cyan"
 		   fi
 	 	   if [ "$PREFS_RELEASE" = "true" ]; then
 		   	release
 		   else
-		   	printf "\n$red Skipping Release"
+		   	printf "\n$red Skipping Release$cyan"
 		   fi
 	 	   artifact_check
 	 	   ;;
