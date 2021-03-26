@@ -70,15 +70,19 @@ function create_prefs() {
 	printf "\n$cyan Writing default preferences! $nocol\n"
 	mkdir /var/tmp/kscript/
 	touch /var/tmp/kscript/kscript.prefs.enabled
-	echo 100 >> /var/tmp/kscript/kscript.prefs.enabled
+	echo 103 >> /var/tmp/kscript/kscript.prefs.enabled
 	touch /var/tmp/kscript/pref.packaging
-	echo true >> /var/tmp/kscript/pref.packaging
+	echo false >> /var/tmp/kscript/pref.packaging
 	touch /var/tmp/kscript/pref.ramdisk
 	echo false >> /var/tmp/kscript/pref.ramdisk
 	touch /var/tmp/kscript/pref.kuser
 	echo $KBUILD_BUILD_USER >> /var/tmp/kscript/pref.kuser
 	touch /var/tmp/kscript/pref.hostname
 	echo $KBUILD_BUILD_HOST >> /var/tmp/kscript/pref.hostname
+	touch /var/tmp/kscript/pref.buildtype
+	echo clean >> /var/tmp/kscript/pref.buildtype
+	touch /var/tmp/kscript/pref.release
+	echo false >> /var/tmp/kscript/pref.release
 	
 	load_prefs
 }
@@ -88,16 +92,17 @@ function load_prefs() {
 
 	printf "\n$cyan Loading Preferences $nocol"
 	if [ -f /var/tmp/kscript/kscript.prefs.enabled ]; then
-			if [ "$(cat /var/tmp/kscript/kscript.prefs.enabled)" = "100" ];then
+			if [ "$(cat /var/tmp/kscript/kscript.prefs.enabled)" = "103" ];then
 				printf "$cyan <$green SUCCESS! $cyan>$nocol\n" 
 				export PREFS_PACKAGING=$(cat /var/tmp/kscript/pref.packaging)
 				export PREFS_RAMDISK=$(cat /var/tmp/kscript/pref.ramdisk)
 				export KBUILD_BUILD_USER=$(cat /var/tmp/kscript/pref.kuser)
 				export KBUILD_BUILD_HOST=$(cat /var/tmp/kscript/pref.hostname)
+				export PREFS_BUILDTYPE=$(cat /var/tmp/kscript/pref.buildtype)
+				export PREFS_RELEASE=$(cat /var/tmp/kscript/pref.release)
 			else 
 				printf "$cyan <$red FAILED! $cyan>$nocol\n" 
 				printf "\n$red Preferences are outdated! Regenerating!"
-				sleep 5
 				rm -rf /var/tmp/kscript/
 				create_prefs
 			fi
@@ -105,7 +110,6 @@ function load_prefs() {
 	else
 		printf "$cyan <$red FAILED! $cyan>$nocol\n" 
 		create_prefs
-		sleep 1
 	fi
 
 }
@@ -129,13 +133,27 @@ function toggle_prefs {
 		printf "$cyan <$red DISABLED $cyan>$nocol\n" 
 	fi
 	
-	printf "\n$yellow 3. Set Custom Build Username "
+	printf "\n$yellow 3. Release Package to Github "
+	if [ "$PREFS_RELEASE" = "true" ]; then
+		printf "$cyan <$green ENABLED $cyan>$nocol\n" 
+	else
+		printf "$cyan <$red DISABLED $cyan>$nocol\n" 
+	fi
+	
+	printf "\n$yellow 4. Toggle Build Type "
+	if [ "$PREFS_BUILDTYPE" = "clean" ]; then
+		printf "$cyan <$green CLEAN $cyan>$nocol\n" 
+	else
+		printf "$cyan <$red DIRTY $cyan>$nocol\n" 
+	fi
+	
+	printf "\n$yellow 5. Set Custom Build Username "
 	printf "$cyan <$green $KBUILD_BUILD_USER $cyan>$nocol\n"
-	printf "\n$yellow 4. Set Custom Build Hostname "
+	printf "\n$yellow 6. Set Custom Build Hostname "
 	printf "$cyan <$green $KBUILD_BUILD_HOST $cyan>$nocol\n"  
 	
 	printf "\n"
-	printf "\n$yellow 5. Exit to Main Menu"
+	printf "\n$yellow 7. Exit to Main Menu"
 	printf "\n"
 	printf "\n$yellow Awaiting User Input: $red"
 	read toggle
@@ -143,6 +161,8 @@ function toggle_prefs {
 		1) if [ "$PREFS_PACKAGING" = "true" ]; then
 			sed -i "s/true/false/" /var/tmp/kscript/pref.packaging
 			export PREFS_PACKAGING=$(cat /var/tmp/kscript/pref.packaging)
+			sed -i "s/true/false/" /var/tmp/kscript/pref.release
+			export PREFS_RELEASE=$(cat /var/tmp/kscript/pref.release)
 		   else
 		   	sed -i "s/false/true/" /var/tmp/kscript/pref.packaging
 		   	export PREFS_PACKAGING=$(cat /var/tmp/kscript/pref.packaging)
@@ -158,7 +178,28 @@ function toggle_prefs {
 		   fi
 		   toggle_prefs
 		   ;;
-		3) printf "\n"
+		3) if [ "$PREFS_RELEASE" = "true" ]; then
+			sed -i "s/true/false/" /var/tmp/kscript/pref.release
+			export PREFS_RELEASE=$(cat /var/tmp/kscript/pref.release)
+		   else
+		   	sed -i "s/false/true/" /var/tmp/kscript/pref.release
+		   	sed -i "s/false/true/" /var/tmp/kscript/pref.packaging
+		   	export PREFS_RELEASE=$(cat /var/tmp/kscript/pref.release)
+		   	export PREFS_PACKAGING=$(cat /var/tmp/kscript/pref.packaging)
+		   	
+		   fi
+		   toggle_prefs
+		   ;;
+		4) if [ "$PREFS_BUILDTYPE" = "clean" ]; then
+			sed -i "s/clean/dirty/" /var/tmp/kscript/pref.buildtype
+			export PREFS_BUILDTYPE=$(cat /var/tmp/kscript/pref.buildtype)
+		   else
+		   	sed -i "s/dirty/clean/" /var/tmp/kscript/pref.buildtype
+		   	export PREFS_BUILDTYPE=$(cat /var/tmp/kscript/pref.buildtype)
+		   fi
+		   toggle_prefs
+		   ;;
+		5) printf "\n"
 		   printf "\n$yellow Enter new username: $red"
 		   read newuser
 		   printf "\n"
@@ -171,7 +212,7 @@ function toggle_prefs {
 		   	toggle_prefs 
 		   fi
 		   ;;
-		4) printf "\n"
+		6) printf "\n"
 		   printf "\n$yellow Enter new hostname: $red"
 		   read newhost
 		   printf "\n"
@@ -184,7 +225,7 @@ function toggle_prefs {
 		   	toggle_prefs 
 		   fi
 		   ;;
-		5) menu
+		7) menu
 		   ;;
 		*) menu
 		   ;;
@@ -258,7 +299,6 @@ function preflight() {
 	rm /tmp/kscript.hash
 	touch /tmp/kscript.hash
 	md5sum $(pwd)/$0 >> /tmp/kscript.hash
-	sleep 1
 }
 # Create Release Notes
 function make_releasenotes()  {
@@ -285,7 +325,7 @@ function make_defconfig()  {
 # Make Kernel
 function make_kernel  {
 	echo -e " "
-	make -j$(nproc --all) CC='ccache clang  -Qunused-arguments -fcolor-diagnostics' AR=llvm-ar NM=llvm-nm STRIP=llvm-strip LD=ld.lld O=$OUTPUT 
+	make -j$(nproc --all) CC='ccache clang  -Qunused-arguments -fcolor-diagnostics' O=$OUTPUT 
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
  		then
@@ -299,32 +339,22 @@ function make_kernel  {
 # Make Flashable Zip
 function make_package()  {
 	printf "\n"
-	
-	if [ "$PREFS_PACKAGING" = "true" ]; then
-		printf "\n$green Packaging Kernel!"
-		cp $KERNEL_IMG $ANYKERNEL_DIR
-		cd $ANYKERNEL_DIR
-		zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip
-		mv UPDATE-AnyKernel2.zip $FINAL_ZIP
-		cp $FINAL_ZIP $UPLOAD_DIR
-		cd $KERNEL_DIR
-	else
-		printf "\n$red Skipping Packaging!"
-	fi
-	
+	printf "\n$green Packaging Kernel!"
+	cp $KERNEL_IMG $ANYKERNEL_DIR
+	cd $ANYKERNEL_DIR
+	zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip
+	mv UPDATE-AnyKernel2.zip $FINAL_ZIP
+	cp $FINAL_ZIP $UPLOAD_DIR
+	cd $KERNEL_DIR
 }
 
 # Upload Flashable Zip to GitHub Releases <3
 function release()  {
 	printf "\n"
-	if [ "$PREFS_PACKAGING" = "true" ]; then
-		printf "\n$red Releasing Kernel Package to Github!"
-		cd $UPLOAD_DIR
-		gh release create "$RELEASE_TAG" "$FINAL_ZIP" -F releasenotes.md -p -t "$RELEASE_MSG"
-		cd $KERNEL_DIR
-	else
-		printf "\n$red Skipping release!"
-	fi
+	printf "\n$red Releasing Kernel Package to Github!"
+	cd $UPLOAD_DIR
+	gh release create "$RELEASE_TAG" "$FINAL_ZIP" -F releasenotes.md -p -t "$RELEASE_MSG"
+	cd $KERNEL_DIR
 }
 
 # Make Clean
@@ -401,16 +431,13 @@ function menu()  {
 	clear
 	echo -e "$yellow What do you want to do?"
 	echo -e ""
-	echo -e "1: Build Kernel and Release it to Github"
-	echo -e "2: Build Clean Kernel but do not release it"
-	echo -e "3: Build Dirty Kernel "
-	echo -e "4: Make defconfig and open menuconfig"
-	echo -e "5: Make defconfig only"
-	echo -e "6: Cleanup script artifacts"
-	echo -e "7: Clear ccache and reset stats"
-	echo -e "8: Regenerate defconfig"
-	echo -e "9: Toggle Preferences"
-	echo -e "10: Exit to Shell"
+	echo -e "1: Build Kernel"
+	echo -e "2: Open Menuconfig"
+	echo -e "3: Cleanup script artifacts"
+	echo -e "4: Clear ccache and reset stats"
+	echo -e "5: Regenerate defconfig"
+	echo -e "6: Toggle Preferences"
+	echo -e "7: Exit to Shell"
 	echo -e ""
 	echo -e "Awaiting User Input: $red"
 	read choice
@@ -420,64 +447,58 @@ function menu()  {
 		   echo -e "$cyan        Building "$KERNEL_NAME "Kernel         "
 		   echo -e $DIVIDER
 		   update_repo
-		   make_cleanup
+		   if [ "$PREFS_BUILDTYPE" = "clean" ]; then
+		   	make_cleanup
+		   else
+		   	printf "\n$red Skipping Cleanup"
+		   fi
 		   artifact_check
-		   make_releasenotes
+		   if [ "$PREFS_RELEASE" = "true" ]; then
+		   	make_releasenotes
+		   else
+		   	printf "\n$red Skipping Changelog Generation"
+		   fi
 		   make_defconfig
 	 	   make_kernel
-	 	   make_package
-	 	   release
+	 	   if [ "$PREFS_PACKAGING" = "true" ]; then
+		   	make_package
+		   else
+		   	printf "\n$red Skipping Packaging"
+		   fi
+	 	   if [ "$PREFS_RELEASE" = "true" ]; then
+		   	release
+		   else
+		   	printf "\n$red Skipping Release"
+		   fi
 	 	   artifact_check
 	 	   ;;
-		2) echo -e $DIVIDER
-		   echo -e "$cyan        Building "$KERNEL_NAME "Kernel         "
-		   echo -e $DIVIDER
-		   make_cleanup
-		   artifact_check
-		   make_releasenotes
-		   make_defconfig
-	 	   make_kernel
-	 	   make_package 
-	 	   artifact_check
-	 	   ;;
-	 	3) echo -e $DIVIDER
-		   echo -e "$cyan        Building "$KERNEL_NAME "Kernel         "
-		   echo -e $DIVIDER
-	 	   make_defconfig
-	 	   make_kernel
-	 	   ;;
-	 	4) echo -e $DIVIDER
+	 	2) echo -e $DIVIDER
 		   echo -e "$cyan        Opening Menuconfig                          "
 		   echo -e $DIVIDER
 	 	   make_defconfig
 	 	   make_menuconfig
 	 	   menu
 	 	   ;;
-	 	5) echo -e $DIVIDER
-		   echo -e "$cyan        Generating Defconfig                        "
-		   echo -e $DIVIDER
-	 	   make_defconfig
+	 	3) make_cleanup
+	 	   artifact_check
 	 	   menu
 	 	   ;;
-	 	6) make_cleanup
-	 	   menu
-	 	   ;;
-	 	7) echo -e $DIVIDER
+	 	4) echo -e $DIVIDER
 		   echo -e "$cyan    Clearing CCACHE                            "
 		   echo -e $DIVIDER
 	 	   clear_ccache
 	 	   menu
 	 	   ;;
-	 	8) echo -e $DIVIDER
+	 	5) echo -e $DIVIDER
 		   echo -e "$cyan    Regenerating defconfig. Please wait        "
 		   echo -e $DIVIDER
 	 	   make_defconfig
 	 	   regen_defconfig
 	 	   menu
 	 	   ;;
-	 	9) toggle_prefs
+	 	6) toggle_prefs
 	 	   ;;
-	 	10) echo -e "$red Exiting"
+	 	7) echo -e "$red Exiting"
 	 	   clear
 	 	   ;; 
 	 	   
