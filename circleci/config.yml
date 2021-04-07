@@ -10,15 +10,31 @@ jobs:
              sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
              sudo apt-add-repository https://cli.github.com/packages
              sudo apt update
-             sudo apt-get --assume-yes install gh
+             sudo apt-get --assume-yes install gh ccache
+      - restore_cache:
+          key: ccache-{{ arch}}-{{ .Branch }}
+          paths:
+           - /home/circleci/.ccache
+      - run:
+          name: Initialize CCACHE
+          command: |
+            ccache --show-stats
+            ccache --zero-stats
+            ccache --max-size=2.0G
       - run:
           name: Building Stratosphere Kernel
           command: |
            git config --global user.name "taalojarvi"
            git config --global user.email "sreedevan05@gmail.com"
            git config --global color.ui false
-           git clone --depth=1 https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -b ${CIRCLE_BRANCH} .
+           git clone --depth 10 https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -b ${CIRCLE_BRANCH} .
            bash .circleci/build.sh
+      - save_cache:
+          key: ccache-{{ arch}}-{{ .Branch }}
+          paths:
+           - /home/circleci/.ccache
+      - store_artifacts:
+          paths: /home/circleci/project/canary
 workflows:
   version: 2.1
   cooking:
