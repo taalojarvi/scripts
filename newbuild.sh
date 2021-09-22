@@ -23,7 +23,7 @@ DIVIDER="$blue***********************************************$nocol"
 KERNEL_NAME="Stratosphere"
 VERSION="Kernel"
 RELEASE_MSG="Stratosphere Kernel: Personal Machine Build"
-DEFCONFIG=stratosphere_defconfig
+DEFCONFIG=surya_defconfig
 # Need not edit these.
 DATE=$(date +"%d-%m-%Y-%I-%M")
 FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
@@ -35,7 +35,7 @@ BASE_DIR=$HOME
 KERNEL_DIR=$(pwd)
 ANYKERNEL_DIR=$BASE_DIR/AnyKernel3
 UPLOAD_DIR=$BASE_DIR/Stratosphere-Canaries
-TC_DIR=$BASE_DIR/proton-clang
+TC_DIR=$BASE_DIR/gcc-arm64
 LOG_DIR=$BASE_DIR/logs
 
 # Need not be edited
@@ -46,12 +46,12 @@ KERNEL_IMG=$OUTPUT/arch/arm64/boot/Image.gz-dtb
 
 
 # Export Environment Variables. 
-export PATH="$TC_DIR/bin:$PATH"
-# PATH="$TC_DIR/bin:$HOME/linaro-gcc/bin${PATH}"
+# export PATH="$TC_DIR/bin:$PATH"
+# export PATH="$TC_DIR/bin:$HOME/gcc-arm/bin${PATH}"
 export CLANG_TRIPLE=aarch64-linux-gnu-
 export ARCH=arm64
-export CROSS_COMPILE=aarch64-linux-gnu-
-export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+export CROSS_COMPILE=~/gcc-arm64/bin/aarch64-elf-
+export CROSS_COMPILE_ARM32=~/gcc-arm/bin/arm-eabi-
 export LD_LIBRARY_PATH=$TC_DIR/lib
 # Need not be edited.
 export KBUILD_BUILD_USER=$USER
@@ -341,13 +341,13 @@ function make_releasenotes()  {
 # Make defconfig
 function make_defconfig()  {
 	echo -e " "
-	make $DEFCONFIG CC=clang O=$OUTPUT
+	make $DEFCONFIG O=$OUTPUT
 }
 
 # Make Kernel
 function make_kernel  {
 	echo -e " "
-	make -j$(nproc --all) CC='ccache clang  -Qunused-arguments -fcolor-diagnostics' O=$OUTPUT 
+	make -j$(nproc --all) O=$OUTPUT 
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
  		then
@@ -364,8 +364,9 @@ function make_package()  {
 	printf "\n$green Packaging Kernel!"
 	cp $KERNEL_IMG $ANYKERNEL_DIR
 	cd $ANYKERNEL_DIR
-	zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip
-	mv UPDATE-AnyKernel2.zip $FINAL_ZIP
+	zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip zipsigner.jar
+	java -jar zipsigner.jar UPDATE-AnyKernel2.zip UPDATE-AnyKernel2-signed.zip
+	mv UPDATE-AnyKernel2-signed.zip $FINAL_ZIP
 	cp $FINAL_ZIP $UPLOAD_DIR
 	cd $KERNEL_DIR
 }
@@ -385,8 +386,8 @@ function make_cleanup()  {
 	echo -e "$cyan    Cleaning out build artifacts. Please wait       "
 	echo -e $DIVIDER
 	echo -e " "
-	make clean CC=clang O=$OUTPUT
-	make mrproper CC=clang O=$OUTPUT
+	make clean O=$OUTPUT
+	make mrproper O=$OUTPUT
 }
 
 # Check for Script Artifacts from previous builds
