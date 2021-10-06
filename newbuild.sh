@@ -23,7 +23,7 @@ DIVIDER="$blue***********************************************$nocol"
 KERNEL_NAME="Stratosphere"
 VERSION="Kernel"
 RELEASE_MSG="Stratosphere Kernel: Personal Machine Build"
-DEFCONFIG=surya_defconfig
+DEFCONFIG=vendor/surya-perf_defconfig
 # Need not edit these.
 DATE=$(date +"%d-%m-%Y-%I-%M")
 FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
@@ -35,7 +35,7 @@ BASE_DIR=$HOME
 KERNEL_DIR=$(pwd)
 ANYKERNEL_DIR=$BASE_DIR/AnyKernel3
 UPLOAD_DIR=$BASE_DIR/Stratosphere-Canaries
-TC_DIR=$BASE_DIR/proton-clang
+TC_DIR=$BASE_DIR/azure-clang
 LOG_DIR=$BASE_DIR/logs
 
 # Need not be edited
@@ -51,6 +51,8 @@ export PATH="$TC_DIR/bin:$PATH"
 # export PATH="$TC_DIR/bin:$HOME/gcc-arm/bin${PATH}"
 export CLANG_TRIPLE=aarch64-linux-gnu-
 export ARCH=arm64
+# export CROSS_COMPILE=~/gcc-arm64/bin/aarch64-elf-
+# export CROSS_COMPILE_ARM32=~/gcc-arm/bin/arm-eabi-
 export CROSS_COMPILE=aarch64-linux-gnu-
 export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 export LD_LIBRARY_PATH=$TC_DIR/lib
@@ -342,12 +344,14 @@ function make_releasenotes()  {
 # Make defconfig
 function make_defconfig()  {
 	echo -e " "
+#	make $DEFCONFIG LD=aarch64-elf-ld.lld O=$OUTPUT
 	make $DEFCONFIG CC='ccache clang' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=$OUTPUT
 }
 
 # Make Kernel
 function make_kernel  {
 	echo -e " "
+#	make -j$(nproc --all) LD=ld.lld O=$OUTPUT 
 	make -j$(nproc --all) CC='ccache clang' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=$OUTPUT 
 # Check if Image.gz-dtb exists. If not, stop executing.
 	if ! [ -a $KERNEL_IMG ];
@@ -388,6 +392,8 @@ function make_cleanup()  {
 	echo -e "$cyan    Cleaning out build artifacts. Please wait       "
 	echo -e $DIVIDER
 	echo -e " "
+#	make clean LD=ld.lld O=$OUTPUT
+#	make mrproper LD=ld.lld O=$OUTPUT
 	make clean CC='ccache clang' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=$OUTPUT
 	make mrproper CC='ccache clang' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=$OUTPUT
 }
@@ -421,6 +427,7 @@ function update_repo()  {
 function make_menuconfig()  {
 	echo -e " "
 	make menuconfig CC='ccache clang' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=$OUTPUT
+	# make menuconfig LD=ld.lld O=$OUTPUT
 }
 
 # Clear CCACHE
@@ -432,8 +439,8 @@ function clear_ccache  {
 # Regenerate Defconfig
 function regen_defconfig()  {
 	echo -e " "
-	cp $OUTPUT/.config $KERNEL_DIR/arch/arm64/configs/$DEFCONFIG 
-	git commit arch/arm64/configs/$DEFCONFIG
+	cp $OUTPUT/.config $KERNEL_DIR/arch/arm64/configs/"$DEFCONFIG"
+	# git commit arch/arm64/configs/$DEFCONFIG
 }
 	
 # Menu
@@ -456,10 +463,10 @@ function menu()  {
 		1) echo -e $DIVIDER
 		   echo -e "$cyan        Building "$KERNEL_NAME "Kernel         "
 		   echo -e $DIVIDER
-		   if [ "$PREFS_UPDATEREPO" = "clean" ]; then
+		   if [ "$PREFS_UPDATEREPO" = "true" ]; then
 		   	update_repo
 		   else
-		   	printf "\n$red Skipping Repo Updation$cyan"
+		   	printf "\n$red Skipping Repo Updation\n$cyan"
 		   fi
 		   if [ "$PREFS_BUILDTYPE" = "clean" ]; then
 		   	make_cleanup
@@ -484,7 +491,6 @@ function menu()  {
 		   else
 		   	printf "\n$red Skipping Release$cyan"
 		   fi
-	 	   artifact_check
 	 	   ;;
 	 	2) echo -e $DIVIDER
 		   echo -e "$cyan        Opening Menuconfig                          "
