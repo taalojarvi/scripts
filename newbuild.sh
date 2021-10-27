@@ -42,8 +42,9 @@ LOG_DIR=$BASE_DIR/logs
 # Need not be edited
 RELEASE_NOTES=$UPLOAD_DIR/releasenotes.md
 OUTPUT=$BASE_DIR/output
-KERNEL_IMG=$OUTPUT/arch/arm64/boot/Image.gz-dtb
-KERNEL_DTB=$OUTPUT/arch/arm64/boot/dtbo.img
+KERNEL_IMG=$OUTPUT/arch/arm64/boot/Image.gz
+KERNEL_DTBO=$OUTPUT/arch/arm64/boot/dtbo.img
+KERNEL_DTB=$OUTPUT/arch/arm64/boot/dts/qcom/sdmmagpie.dtb
 
 
 
@@ -84,9 +85,9 @@ function create_prefs() {
 	touch /var/tmp/kscript/pref.ramdisk
 	echo false >> /var/tmp/kscript/pref.ramdisk
 	touch /var/tmp/kscript/pref.kuser
-	echo $KBUILD_BUILD_USER >> /var/tmp/kscript/pref.kuser
+	echo "$KBUILD_BUILD_USER" >> /var/tmp/kscript/pref.kuser
 	touch /var/tmp/kscript/pref.hostname
-	echo $KBUILD_BUILD_HOST >> /var/tmp/kscript/pref.hostname
+	echo "$KBUILD_BUILD_HOST" >> /var/tmp/kscript/pref.hostname
 	touch /var/tmp/kscript/pref.buildtype
 	echo clean >> /var/tmp/kscript/pref.buildtype
 	touch /var/tmp/kscript/pref.release
@@ -271,7 +272,7 @@ function check_hash() {
 		printf "$cyan Previous checksum found!$nocol\n"
 	fi
 	printf "$cyan Checking if script has been modified "
-	export CHECKSUM_CURRENT=$(md5sum $(pwd)/$0)
+	export CHECKSUM_CURRENT=$(md5sum $(pwd)/"$0")
 	export CHECKSUM_FILE=$(cat /tmp/kscript.hash)
 	if [ "$CHECKSUM_CURRENT" = "$CHECKSUM_FILE" ]; then
 		printf "$cyan <$green SUCCESS! $cyan>$nocol\n" 
@@ -290,7 +291,7 @@ function preflight() {
 	printf "\n"
 	
 	printf "$cyan Checking Anykernel directory "
-	if [ -d $ANYKERNEL_DIR ]; then
+	if [ -d "$ANYKERNEL_DIR" ]; then
 		printf "<$green SUCCESS $cyan> \n"
 	else
 		printf "<$red FAILED $cyan> \n"
@@ -299,23 +300,23 @@ function preflight() {
 	fi
 	
 	printf "$cyan Checking Release Package directory "
-	if [ -d $UPLOAD_DIR ]; then
+	if [ -d "$UPLOAD_DIR" ]; then
 		printf "<$green SUCCESS $cyan> \n"
 	else
 		printf "<$red FAILED $cyan> \n"
-		mkdir $UPLOAD_DIR 
+		mkdir "$UPLOAD_DIR" 
 	fi
 	
 	printf "$cyan Checking Logs Directory "
-	if [ -d $UPLOAD_DIR ]; then
+	if [ -d "$UPLOAD_DIR" ]; then
 		printf "<$green SUCCESS $cyan> \n"
 	else
 		printf "<$red FAILED $cyan> \n"
-		mkdir $LOG_DIR 
+		mkdir "$LOG_DIR" 
 	fi
 	
 	printf "$cyan Checking Toolchain directory "
-	if [ -d $TC_DIR ]; then
+	if [ -d "$TC_DIR" ]; then
 		printf "<$green SUCCESS $cyan> \n"
 	else
 		printf "<$red FAILED $cyan> \n"
@@ -328,7 +329,7 @@ function preflight() {
 	printf "$cyan Generating Hash for Buildscript $nocol\n"
 	rm /tmp/kscript.hash
 	touch /tmp/kscript.hash
-	md5sum $(pwd)/$0 >> /tmp/kscript.hash
+	md5sum $(pwd)/"$0" >> /tmp/kscript.hash
 }
 # Create Release Notes
 function make_releasenotes()  {
@@ -337,29 +338,29 @@ function make_releasenotes()  {
 	echo -e >> releasenotes.md
 	echo -e "Build Information" >> releasenotes.md
 	echo -e >> releasenotes.md
-	echo -e "Builder: "$KBUILD_BUILD_USER >> releasenotes.md
-	echo -e "Machine: "$KBUILD_BUILD_HOST >> releasenotes.md
-	echo -e "Build Date: "$DATE >> releasenotes.md
+	echo -e "Builder: ""$KBUILD_BUILD_USER" >> releasenotes.md
+	echo -e "Machine: ""$KBUILD_BUILD_HOST" >> releasenotes.md
+	echo -e "Build Date: ""$DATE" >> releasenotes.md
 	echo -e >> releasenotes.md
 	echo -e "Last 5 Commits before Build:-" >> releasenotes.md
 	git log --decorate=auto --pretty=format:'%C(yellow)%d%Creset %s %C(bold blue)<%an>%Creset %n' --graph -n 10 >> releasenotes.md
-	cp releasenotes.md $RELEASE_NOTES
+	cp releasenotes.md "$RELEASE_NOTES"
 }
 
 # Make defconfig
 function make_defconfig()  {
 	echo -e " "
 #	make $DEFCONFIG LD=aarch64-elf-ld.lld O=$OUTPUT
-	make $DEFCONFIG CC='ccache clang' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=$OUTPUT
+	make $DEFCONFIG CC='ccache clang -Qunused-arguments -fcolor-diagnostics' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O="$OUTPUT"
 }
 
 # Make Kernel
 function make_kernel  {
 	echo -e " "
 #	make -j$THREADS LD=ld.lld O=$OUTPUT 
-	make -j$THREADS CC='ccache clang' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=$OUTPUT 
+	make -j"$THREADS" CC='ccache clang -Qunused-arguments -fcolor-diagnostics' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O="$OUTPUT" 
 # Check if Image.gz-dtb exists. If not, stop executing.
-	if ! [ -a $KERNEL_IMG ];
+	if ! [ -a "$KERNEL_IMG" ];
  		then
     		echo -e "$red An error has occured during compilation. Please check your code. $cyan"
     		exit 1
@@ -372,66 +373,71 @@ function make_kernel  {
 function make_package()  {
 	printf "\n"
 	printf "\n$green Packaging Kernel!"
-	cp $KERNEL_IMG $ANYKERNEL_DIR
-	cp $KERNEL_DTB $ANYKERNEL_DIR
-	cd $ANYKERNEL_DIR
+	cp "$KERNEL_IMG" "$ANYKERNEL_DIR"
+	cp "$KERNEL_DTB" "$ANYKERNEL_DIR"
+	cp "$KERNEL_DTBO" "$ANYKERNEL_DIR"
+	cd "$ANYKERNEL_DIR"
 	zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip zipsigner.jar
 	java -jar zipsigner.jar UPDATE-AnyKernel2.zip UPDATE-AnyKernel2-signed.zip
-	mv UPDATE-AnyKernel2-signed.zip $FINAL_ZIP
-	cp $FINAL_ZIP $UPLOAD_DIR
-	cd $KERNEL_DIR
+	mv UPDATE-AnyKernel2-signed.zip "$FINAL_ZIP"
+	cp "$FINAL_ZIP" "$UPLOAD_DIR"
+	cd "$KERNEL_DIR"
 }
 
 # Upload Flashable Zip to GitHub Releases <3
 function release()  {
 	printf "\n"
 	printf "\n$red Releasing Kernel Package to Github!"
-	cd $UPLOAD_DIR
+	cd "$UPLOAD_DIR"
 	gh release create "$RELEASE_TAG" "$FINAL_ZIP" -F releasenotes.md -p -t "$RELEASE_MSG"
-	cd $KERNEL_DIR
+	cd "$KERNEL_DIR"
 }
 
 # Make Clean
 function make_cleanup()  {
-	echo -e $DIVIDER
+	echo -e "$DIVIDER"
 	echo -e "$cyan    Cleaning out build artifacts. Please wait       "
-	echo -e $DIVIDER
+	echo -e "$DIVIDER"
 	echo -e " "
 #	make clean LD=ld.lld O=$OUTPUT
 #	make mrproper LD=ld.lld O=$OUTPUT
-	make clean CC='ccache clang' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=$OUTPUT
-	make mrproper CC='ccache clang' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=$OUTPUT
+	make clean CC='ccache clang -Qunused-arguments -fcolor-diagnostics' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O="$OUTPUT"
+	make mrproper CC='ccache clang -Qunused-arguments -fcolor-diagnostics' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O="$OUTPUT"
 }
 
 # Check for Script Artifacts from previous builds
 function artifact_check()  {
 	echo -e " "
 	echo -e "$red Deleting dtbo.img if found $cyan"
-	find $ANYKERNEL_DIR -name dtbo.img -delete
+	find "$ANYKERNEL_DIR" -name dtbo.img -delete
 	echo -e "$red Deleting releasenotes.md if found $cyan"
-	find $ANYKERNEL_DIR -name releasenotes.md -delete
+	find "$ANYKERNEL_DIR" -name releasenotes.md -delete
 	echo -e "$red Deleting Image.gz-dtb if found $cyan"
-	find $ANYKERNEL_DIR -name Image.gz-dtb -delete
+	find "$ANYKERNEL_DIR" -name Image.gz-dtb -delete
+	echo -e "$red Deleting Image.gz-dtb if found $cyan"
+	find "$ANYKERNEL_DIR" -name Image.gz -delete
+	echo -e "$red Deleting sdmmagpie.dtb if found $cyan"
+	find "$ANYKERNEL_DIR" -name sdmmagpie.dtb -delete
 	echo -e "$red Deleting releasenotes.md if found $cyan"
-	find $KERNEL_DIR -name releasenotes.md -delete
+	find "$KERNEL_DIR" -name releasenotes.md -delete
 	echo -e "$red Deleting zipped packages if found $cyan"
-	find $ANYKERNEL_DIR -name \*.zip -delete
+	find "$ANYKERNEL_DIR" -name \*.zip -delete
 }
 
 # Update Toolchain Repository
 function update_repo()  {
 	echo -e " "
-	cd $TC_DIR
+	cd "$TC_DIR"
 	git pull origin
-	cd $ANYKERNEL_DIR
+	cd "$ANYKERNEL_DIR"
 	git pull https://github.com/osm0sis/AnyKernel3 master
-	cd $KERNEL_DIR
+	cd "$KERNEL_DIR"
 }
 
 # Open Menuconfig
 function make_menuconfig()  {
 	echo -e " "
-	make gconfig CC='ccache clang' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=$OUTPUT
+	make gconfig CC='ccache clang -Qunused-arguments -fcolor-diagnostics' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O="$OUTPUT"
 	# make menuconfig LD=ld.lld O=$OUTPUT
 }
 
@@ -444,7 +450,7 @@ function clear_ccache  {
 # Regenerate Defconfig
 function regen_defconfig()  {
 	echo -e " "
-	cp $OUTPUT/.config $KERNEL_DIR/arch/arm64/configs/"$DEFCONFIG"
+	cp "$OUTPUT"/.config "$KERNEL_DIR"/arch/arm64/configs/"$DEFCONFIG"
 	# git commit arch/arm64/configs/$DEFCONFIG
 }
 	
@@ -465,9 +471,9 @@ function menu()  {
 	read choice
 	
 	case $choice in
-		1) echo -e $DIVIDER
+		1) echo -e "$DIVIDER"
 		   echo -e "$cyan        Building "$KERNEL_NAME "Kernel         "
-		   echo -e $DIVIDER
+		   echo -e "$DIVIDER"
 		   if [ "$PREFS_UPDATEREPO" = "true" ]; then
 		   	update_repo
 		   else
@@ -497,9 +503,9 @@ function menu()  {
 		   	printf "\n$red Skipping Release$cyan"
 		   fi
 	 	   ;;
-	 	2) echo -e $DIVIDER
+	 	2) echo -e "$DIVIDER"
 		   echo -e "$cyan        Opening Menuconfig                          "
-		   echo -e $DIVIDER
+		   echo -e "$DIVIDER"
 	 	   make_defconfig
 	 	   make_menuconfig
 	 	   menu
@@ -508,15 +514,15 @@ function menu()  {
 	 	   artifact_check
 	 	   menu
 	 	   ;;
-	 	4) echo -e $DIVIDER
+	 	4) echo -e "$DIVIDER"
 		   echo -e "$cyan    Clearing CCACHE                            "
-		   echo -e $DIVIDER
+		   echo -e "$DIVIDER"
 	 	   clear_ccache
 	 	   menu
 	 	   ;;
-	 	5) echo -e $DIVIDER
+	 	5) echo -e "$DIVIDER"
 		   echo -e "$cyan    Regenerating defconfig. Please wait        "
-		   echo -e $DIVIDER
+		   echo -e "$DIVIDER"
 	 	   make_defconfig
 	 	   regen_defconfig
 	 	   menu
