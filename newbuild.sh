@@ -27,6 +27,8 @@ RELEASE_MSG="Stratosphere Kernel: Personal Machine Build"
 DEFCONFIG=vendor/surya-perf_defconfig
 # Need not edit these.
 DATE=$(date +"%d-%m-%Y-%I-%M")
+SHORTDATE=$(date +"%d-%m-%Y")
+LOG="Build"-$SHORTDATE
 FINAL_ZIP=$KERNEL_NAME-$VERSION-$DATE.zip
 RELEASE_TAG=earlyaccess-$DATE
 
@@ -408,20 +410,20 @@ function make_cleanup()  {
 # Check for Script Artifacts from previous builds
 function artifact_check()  {
 	echo -e " "
-	echo -e "$red Deleting dtbo.img if found $cyan"
-	find "$ANYKERNEL_DIR" -name dtbo.img -delete
-	echo -e "$red Deleting releasenotes.md if found $cyan"
-	find "$ANYKERNEL_DIR" -name releasenotes.md -delete
+	echo -e "$red Deleting dtbo.img if found $cyan" 
+	find "$ANYKERNEL_DIR" -name dtbo.img -delete 
+	echo -e "$red Deleting releasenotes.md if found $cyan" 
+	find "$ANYKERNEL_DIR" -name releasenotes.md -delete 
 	echo -e "$red Deleting Image.gz-dtb if found $cyan"
-	find "$ANYKERNEL_DIR" -name Image.gz-dtb -delete
-	echo -e "$red Deleting Image.gz-dtb if found $cyan"
-	find "$ANYKERNEL_DIR" -name Image.gz -delete
-	echo -e "$red Deleting sdmmagpie.dtb if found $cyan"
-	find "$ANYKERNEL_DIR" -name sdmmagpie.dtb -delete
-	echo -e "$red Deleting releasenotes.md if found $cyan"
-	find "$KERNEL_DIR" -name releasenotes.md -delete
-	echo -e "$red Deleting zipped packages if found $cyan"
-	find "$ANYKERNEL_DIR" -name \*.zip -delete
+	find "$ANYKERNEL_DIR" -name Image.gz-dtb -delete 
+	echo -e "$red Deleting Image.gz-dtb if found $cyan" 
+	find "$ANYKERNEL_DIR" -name Image.gz -delete 
+	echo -e "$red Deleting sdmmagpie.dtb if found $cyan" 
+	find "$ANYKERNEL_DIR" -name sdmmagpie.dtb -delete 
+	echo -e "$red Deleting releasenotes.md if found $cyan" 
+	find "$KERNEL_DIR" -name releasenotes.md -delete 
+	echo -e "$red Deleting zipped packages if found $cyan" 
+	find "$ANYKERNEL_DIR" -name \*.zip -delete 
 }
 
 # Update Toolchain Repository
@@ -486,12 +488,12 @@ function menu()  {
 		   fi
 		   artifact_check
 		   if [ "$PREFS_RELEASE" = "true" ]; then
-		   	make_releasenotes
+		   	make_releasenotes 
 		   else
 		   	printf "\n$red Skipping Changelog Generation$cyan"
 		   fi
 		   make_defconfig
-	 	   make_kernel
+	 	   make_kernel 
 	 	   if [ "$PREFS_PACKAGING" = "true" ]; then
 		   	make_package
 		   else
@@ -532,15 +534,64 @@ function menu()  {
 	 	7) echo -e "$red Exiting"
 	 	   clear
 	 	   ;;
-	 	8) make_package
+	 	1010) debug_menu
 	 	   ;; 
 	 	   
 	 esac
 	
 }
-load_prefs
-check_hash
-menu
+# Super Secret Debug Menu
+function debug_menu()  {
+	clear
+	echo -e "$red Super Secret Debug Menu"
+	echo -e ""
+	echo -e "1: artifact_check"
+	echo -e "2: update_repo"
+	echo -e "3: make_cleanup"
+	echo -e "4: clear_ccache"
+	echo -e "5: make_defconfig"
+	echo -e "6: regen_defconfig"
+	echo -e "7: toggle_prefs"
+	echo -e "8: make_package"
+	echo -e "9: make_cleanup"
+	echo -e "10: make_kernel"
+	echo -e "11: release"
+	echo -e "12: menu"
+	echo -e ""
+	echo -e "Awaiting User Input: $yellow"
+	read dchoice
+	
+	case $dchoice in
+		1) artifact_check 
+	 	   ;;
+	 	2) update_repo
+	 	   ;;
+	 	3) make_cleanup
+	 	   ;;
+	 	4) clear_ccache
+	 	   ;;
+	 	5) make_defconfig
+	 	   ;;
+	 	6) make_menuconfig
+	 	   ;;
+	 	7) regen_defconfig
+	 	   ;;
+	 	8) make_package
+	 	   ;; 
+	 	9) make_cleanup
+	 	   ;;
+	       10) make_kernel
+	 	   ;;
+	       11) release
+	       	   ;;
+	       12) menu
+	       	   ;;
+	 esac
+	
+}
+load_prefs | tee -a "$LOG_DIR"/"$LOG"
+check_hash | tee -a "$LOG_DIR"/"$LOG"
+menu | tee -a "$LOG_DIR"/"$LOG"
 BUILD_END=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))
 echo -e "Script execution completed after $((DIFF/60)) minute(s) and $((DIFF % 60)) seconds"
