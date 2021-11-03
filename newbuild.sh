@@ -102,7 +102,7 @@ function create_prefs() {
 
 # Load Preferences from prop files
 function load_prefs() {
-
+	
 	printf "\n$cyan Loading Preferences $nocol"
 	if [ -f /var/tmp/kscript/kscript.prefs.enabled ]; then
 			if [ "$(cat /var/tmp/kscript/kscript.prefs.enabled)" = "105" ];then
@@ -589,9 +589,13 @@ function debug_menu()  {
 	 esac
 	
 }
+printf "\n" | tee -a "$LOG_DIR"/"$LOG"
+printf "Script started on "$DATE"\n" | tee -a "$LOG_DIR"/"$LOG"
+printf "\n" | tee -a "$LOG_DIR"/"$LOG"
 load_prefs | tee -a "$LOG_DIR"/"$LOG"
 check_hash | tee -a "$LOG_DIR"/"$LOG"
 menu | tee -a "$LOG_DIR"/"$LOG"
+sed -i 's/\x1b\[[0-9;]*[a-zA-Z]//g' "$LOG_DIR"/"$LOG"
 BUILD_END=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))
 echo -e "Script execution completed after $((DIFF/60)) minute(s) and $((DIFF % 60)) seconds"
