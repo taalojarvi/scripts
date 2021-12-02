@@ -367,19 +367,19 @@ function make_kernel  {
     		echo -e "$red An error has occured during compilation. Please check your code. $cyan"
     		exit 1
     	else
-    		echo -e "$red Kernel built succesfully! $cyan"
+    		printf "\n$red Kernel built succesfully! \n$cyan"
   	fi 
 }
 
 # Make Flashable Zip
 function make_package()  {
 	printf "\n"
-	printf "\n$green Packaging Kernel!"
+	printf "\n$green Packaging Kernel! \n"
 	cp "$KERNEL_IMG" "$ANYKERNEL_DIR"
 	cp "$KERNEL_DTB" "$ANYKERNEL_DIR"/dtb
 	cp "$KERNEL_DTBO" "$ANYKERNEL_DIR"
 	cd "$ANYKERNEL_DIR"
-	zip -r9 UPDATE-AnyKernel2.zip * -x README UPDATE-AnyKernel2.zip zipsigner.jar
+	zip -r9 UPDATE-AnyKernel2.zip * -x README.md LICENSE UPDATE-AnyKernel2.zip zipsigner.jar
 	java -jar zipsigner.jar UPDATE-AnyKernel2.zip UPDATE-AnyKernel2-signed.zip
 	mv UPDATE-AnyKernel2-signed.zip "$FINAL_ZIP"
 	cp "$FINAL_ZIP" "$UPLOAD_DIR"
@@ -389,7 +389,7 @@ function make_package()  {
 # Upload Flashable Zip to GitHub Releases <3
 function release()  {
 	printf "\n"
-	printf "\n$red Releasing Kernel Package to Github!"
+	printf "\n$red Releasing Kernel Package to Github! \n"
 	cd "$UPLOAD_DIR"
 	gh release create "$RELEASE_TAG" "$FINAL_ZIP" -F releasenotes.md -p -t "$RELEASE_MSG"
 	cd "$KERNEL_DIR"
@@ -440,7 +440,7 @@ function update_repo()  {
 # Open Menuconfig
 function make_menuconfig()  {
 	echo -e " "
-	make gconfig CC='ccache clang -Qunused-arguments -fcolor-diagnostics' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O="$OUTPUT" 2>&1 | tee -a "$LOG_DIR"/"$LOG"
+	make nconfig CC='ccache clang -Qunused-arguments -fcolor-diagnostics' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O="$OUTPUT"
 	# make menuconfig LD=ld.lld O=$OUTPUT 2>&1 | tee -a "$LOG_DIR"/"$LOG"
 }
 
