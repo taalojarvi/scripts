@@ -9,6 +9,7 @@
 # Portions Copyight <YEAR> <NAME> <EMAIL>
 #
 BUILD_START=$(date +"%s")
+export TZ=Etc/UTC
 
 # Colours and Graphics
 blue='\033[0;34m'
@@ -340,6 +341,9 @@ function make_releasenotes()  {
 	echo -e >> releasenotes.md
 	echo -e "Build Information" >> releasenotes.md
 	echo -e >> releasenotes.md
+	COMPILE_END=$(date +"%s")
+	CDIFF=$(($COMPILE_END - $COMPILE_START))
+	echo -e "Build completed after $((CDIFF/60)) minute(s) and $((CDIFF % 60)) seconds" >>releasenotes.md
 	echo -e "Builder: ""$KBUILD_BUILD_USER" >> releasenotes.md
 	echo -e "Machine: ""$KBUILD_BUILD_HOST" >> releasenotes.md
 	echo -e "Build Date: ""$DATE" >> releasenotes.md
@@ -359,6 +363,7 @@ function make_defconfig()  {
 # Make Kernel
 function make_kernel  {
 	echo -e " "
+	COMPILE_START=$(date +"%s")
 #	make -j$THREADS LD=ld.lld O=$OUTPUT 2>&1 | tee -a "$LOG_DIR"/"$LOG"
 	make -j"$THREADS" CC='ccache clang -Qunused-arguments -fcolor-diagnostics' LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O="$OUTPUT" 2>&1 | tee -a "$LOG_DIR"/"$LOG"
 # Check if Image.gz-dtb exists. If not, stop executing.
@@ -433,7 +438,8 @@ function update_repo()  {
 	cd "$TC_DIR"
 	git pull origin --ff-only
 	cd "$ANYKERNEL_DIR"
-	git pull https://github.com/osm0sis/AnyKernel3 master --ff-only
+	git pull https://github.com/osm0sis/AnyKernel3 master
+	git push
 	cd "$KERNEL_DIR"
 }
 
