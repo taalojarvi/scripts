@@ -1,0 +1,59 @@
+From 75facee0f093d4676d5d54128fe14b141330e611 Mon Sep 17 00:00:00 2001
+From: taalojarvi <sreedevan05@gmail.com>
+Date: Thu, 27 Jan 2022 00:36:21 +0530
+Subject: [PATCH] power: supply: Ratelimit some necessary loggers.
+
+These loggers spam per Hz cycle when charger is connected. Removing them seems to break Audio playback while charging as the charger gets detected as USB Type-C Headphones.
+So let's ratelimit them so they don't fill up dmesg until a proper fix is found.
+
+Test: Play music while charger is connected
+Result: Audio plays through speakers.
+
+Reference:
+https://github.com/ghostrider-reborn/android_kernel_xiaomi_surya/commit/3ab1672b016975c9f5d91aaccda22818cffc5c1e#diff-2091ad5d30ada7242914a1b17bec3c8ac30a59127a56721eed58d40911a1631b
+
+Signed-off-by: taalojarvi <sreedevan05@gmail.com>
+---
+ drivers/power/supply/qcom/qpnp-smb5.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/power/supply/qcom/qpnp-smb5.c b/drivers/power/supply/qcom/qpnp-smb5.c
+index ca52bbe97075..29f4a1f9332e 100644
+--- a/drivers/power/supply/qcom/qpnp-smb5.c
++++ b/drivers/power/supply/qcom/qpnp-smb5.c
+@@ -2126,7 +2126,7 @@ static int smb5_batt_set_prop(struct power_supply *psy,
+ 		if(val->intval == 0)
+ 			break;
+ 		chg->reverse_charge_mode = val->intval;
+-		pr_err("longcheer,%s,reverse_charge_mode=%d,reverse_state=%d\n",
++		pr_info_ratelimited("longcheer,%s,reverse_charge_mode=%d,reverse_state=%d\n",
+ 			__func__,chg->reverse_charge_mode,chg->reverse_charge_state);
+ 		if(chg->reverse_charge_mode != chg->reverse_charge_state){
+ 			chg->reverse_charge_state = chg->reverse_charge_mode;
+@@ -3918,7 +3918,7 @@ static void step_otg_chg_work(struct work_struct *work)
+ 	}
+ 
+ 	temp = prop.intval;
+-	pr_err("longcheer ,%s:temp=%d\n",__func__,temp);
++	pr_info_ratelimited("longcheer ,%s:temp=%d\n",__func__,temp);
+ 
+ 	otg_chg_current_temp = lct_get_otg_chg_current(temp);
+ 
+@@ -3926,7 +3926,7 @@ static void step_otg_chg_work(struct work_struct *work)
+ 		goto exit_work;
+ 	else
+ 		chg->otg_chg_current = otg_chg_current_temp;
+-	pr_err("longcheer ,%s:otg_chg_current=%d\n",__func__,chg->otg_chg_current);
++	pr_info_ratelimited("longcheer ,%s:otg_chg_current=%d\n",__func__,chg->otg_chg_current);
+ 
+ 	rerun_reverse_check(chg);
+ 
+@@ -3943,7 +3943,7 @@ static int step_otg_chg_notifier_call(struct notifier_block *nb,
+ 
+ 	if (event != PSY_EVENT_PROP_CHANGED)
+ 		return NOTIFY_OK;
+-	pr_err("longcheer ,%s:reverse_charge_state=%d\n",__func__,chg->reverse_charge_state);
++	pr_info_ratelimited("longcheer ,%s:reverse_charge_state=%d\n",__func__,chg->reverse_charge_state);
+ 	if(!chg->reverse_charge_state)
+ 		return NOTIFY_OK;
+ 
