@@ -1,52 +1,43 @@
 #!/bin/bash
-# 
-# Workflow and Shell script for building Android-Linux Kernel on Github Actions
-# Copyright (c) 2022 Karthik Sreedevan <taalojarvi@github.com>
-# Portions Copyright Panchajanya1999 <rsk52959@gmail.com>
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-#
-# If you modify this script to suit  your needs, add your authorship info in the following format
-# Portions Copyight <YEAR> <NAME> <EMAIL>
-#
+# SPDX-License-Identifier: Apache-2.0
+# Automation script for Building Kernels on Github Actions
 
 # Clone the repositories
-git clone --depth 1 https://gitlab.com/Panchajanya1999/azure-clang.git azure
+# git clone --depth 1 https://gitlab.com/Panchajanya1999/azure-clang.git azure
+git clone --depth 1 -b gcc-master https://github.com/mvaisakh/gcc-arm64.git gcc-arm64
+git clone --depth 1 -b gcc-master https://github.com/mvaisakh/gcc-arm.git gcc-arm
+
 git clone --depth 1 -b surya https://github.com/taalojarvi/AnyKernel3
 git clone --depth 1 https://github.com/Stratosphere-Kernel/Stratosphere-Canaries
 
+# Workaround for safe.directory permission fix
+git config --global safe.directory "$GITHUB_WORKSPACE"
+git config --global safe.directory /github/workspace
+git config --global --add safe.directory /__w/android_kernel_xiaomi_surya/android_kernel_xiaomi_surya
+
 # Export Environment Variables. 
 export DATE=$(date +"%d-%m-%Y-%I-%M")
-export PATH="$(pwd)/azure/bin:$PATH"
+export PATH="$(pwd)/gcc-arm64/bin:$PATH"
 # export PATH="$TC_DIR/bin:$HOME/gcc-arm/bin${PATH}"
-export CLANG_TRIPLE=aarch64-linux-gnu-
+# export CLANG_TRIPLE=aarch64-linux-gnu-
 export ARCH=arm64
-# export CROSS_COMPILE=~/gcc-arm64/bin/aarch64-elf-
-# export CROSS_COMPILE_ARM32=~/gcc-arm/bin/arm-eabi-
-export CROSS_COMPILE=aarch64-linux-gnu-
-export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
-export LD_LIBRARY_PATH=$TC_DIR/lib
+export CROSS_COMPILE=$(pwd)/gcc-arm64/bin/aarch64-elf-
+export CROSS_COMPILE_ARM32=$(pwd)/gcc-arm/bin/arm-eabi-
+# export CROSS_COMPILE=aarch64-linux-gnu-
+# export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+# export LD_LIBRARY_PATH=$TC_DIR/lib
 export KBUILD_BUILD_USER="taalojarvi"
+export KBUILD_BUILD_HOST="Github Actions CI"
 export USE_HOST_LEX=yes
 export KERNEL_IMG=output/arch/arm64/boot/Image
 export KERNEL_DTBO=output/arch/arm64/boot/dtbo.img
 export KERNEL_DTB=output/arch/arm64/boot/dts/qcom/sdmmagpie.dtb
 export DEFCONFIG=vendor/surya-perf_defconfig
 export ANYKERNEL_DIR=$(pwd)/AnyKernel3/
-export TC_DIR=$(pwd)/azure/
+# export TC_DIR=$(pwd)/azure/
+export TC_DIR=$(pwd)/gcc-arm64/
 
-# Telegram API Stuff [Panchajanya1999 <rsk52959@gmail.com>]
+# Telegram API Stuff
 BUILD_START=$(date +"%s")
 export GITHUB_TOKEN=$TOKEN
 export token=$TGKEN
@@ -57,7 +48,7 @@ CHATID=-1001719821334
 COMMIT_HEAD=$(git log --oneline -1)
 TERM=xterm
 if [ "$(cat /sys/devices/system/cpu/smt/active)" = "1" ]; then
-		export THREADS=$(expr $(nproc --all) \* 2)
+		export THREADS=$(($(nproc --all) * 2))
 	else
 		export THREADS=$(nproc --all)
 	fi
@@ -81,8 +72,8 @@ tg_post_build() {
 	curl --progress-bar -F document=@"$1" "$BOT_BUILD_URL" \
 	-F chat_id="$CHATID"  \
 	-F "disable_web_page_preview=true" \
-	-F "parse_mode=html" \
-	-F caption="$2 | <b>MD5 Checksum : </b><code>$MD5CHECK</code>"
+	-F "parse_mode=Markdown" \
+	-F caption="$2 | *MD5 Checksum : *\`$MD5CHECK\`"
 }
 
 ##----------------------------------------------------------##
@@ -102,11 +93,13 @@ git log --decorate=auto --pretty=reference --graph -n 10 >> releasenotes.md
 cp releasenotes.md $(pwd)/Stratosphere-Canaries/
 
 # Make defconfig
-make $DEFCONFIG -j$THREADS CC=clang LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=output/
+make $DEFCONFIG LD=aarch64-elf-ld.lld O=output/
+# make $DEFCONFIG -j$THREADS CC=clang LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=output/
 
 # Make Kernel
-tg_post_msg "<b> Build Started on Github Actions</b>%0A<b>Date : </b><code>$(TZ=Etc/UTC date)</code>%0A<b>Top Commit : </b><code>$COMMIT_HEAD</code>%0A"
-make -j$THREADS CC=clang LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=output/
+tg_post_msg "<b> Build Started on Github Actions</b>%0A<b>Build Number: </b><code>"$GITHUB_RUN_NUMBER"</code>%0A<b>Date : </b><code>$(TZ=Etc/UTC date)</code>%0A<b>Top Commit : </b><code>$COMMIT_HEAD</code>%0A"
+make -j$THREADS LD=ld.lld O=output/
+# make -j$THREADS CC=clang LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=output/
 
 # Check if Image.gz-dtb exists. If not, stop executing.
 if ! [ -a $KERNEL_IMG ];
@@ -137,5 +130,4 @@ cp Stratosphere-$GITHUB_RUN_ID-$GITHUB_RUN_NUMBER.zip ../Stratosphere-Canaries/
 cd ../Stratosphere-Canaries/
 
 # Upload Flashable Zip to GitHub Releases <3
-gh release create earlyaccess-$DATE "Stratosphere-"$GITHUB_RUN_ID"-"$GITHUB_RUN_NUMBER.zip"" -F releasenotes.md -p -t "Stratosphere Kernel: Automated Build"
-
+gh release create earlyaccess-$DATE "Stratosphere-"$GITHUB_RUN_ID"-"$GITHUB_RUN_NUMBER.zip"" -F releasenotes.md -p -t "Stratosphere Kernel: Automated Build" || echo "gh-cli encountered an unexpected error"
