@@ -144,8 +144,8 @@ wget -r -q --show-progress "$KERNEL_URL" -O bzImage || blam 1
 printf "\n$cyan *Remote kernel image version is $(file -b bzImage | grep -o 'version [^ ]*' | cut -d ' ' -f 2 || blam 2)" || blam 2
 printf "\n$cyan *Local kernel image version is $(file -b $KERNEL_PATH| grep -o 'version [^ ]*' | cut -d ' ' -f 2 || blam 3)" || blam 3
 
-UPDATE_SHA=$(sha256sum bzImage | cut -d ' ' -f 1 || blam 4 )
-CURRENT_SHA=$(sha256sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4)
+UPDATE_SHA=$(sha1sum bzImage | cut -d ' ' -f 1 || blam 4 )
+CURRENT_SHA=$(sha1sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4)
 
 if [ "$UPDATE_SHA" = "$CURRENT_SHA" ]; then
 		printf "\n$green *Kernel is up to date! No actions were taken.$nocol\n\n"
@@ -161,8 +161,8 @@ fi
 function digtater() {
 clear && diginfo "Checking for updates..." 3 50
 wget -r -q "$KERNEL_URL" -O bzImage || blam 1
-UPDATE_SHA=$(sha256sum bzImage | cut -d ' ' -f 1 || blam 4 )
-CURRENT_SHA=$(sha256sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4 )
+UPDATE_SHA=$(sha1sum bzImage | cut -d ' ' -f 1 || blam 4 )
+CURRENT_SHA=$(sha1sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4 )
 
 	if [ "$UPDATE_SHA" = "$CURRENT_SHA" ]; then
 		clear && digmsg "Kernel is up to date! No actions were taken." 5 50
@@ -178,8 +178,8 @@ CURRENT_SHA=$(sha256sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4 )
 function whipdater(){
 clear && whipinfo "Checking for updates..." 7 50 
 wget -r -q "$KERNEL_URL" -O bzImage || blam 1
-UPDATE_SHA=$(sha256sum bzImage | cut -d ' ' -f 1 || blam 4 )
-CURRENT_SHA=$(sha256sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4 )
+UPDATE_SHA=$(sha1sum bzImage | cut -d ' ' -f 1 || blam 4 )
+CURRENT_SHA=$(sha1sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4 )
 
 	if [ "$UPDATE_SHA" = "$CURRENT_SHA" ]; then
 		clear && whipmsg "Kernel is up to date! No actions were taken." 7 50
