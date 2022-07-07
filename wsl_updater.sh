@@ -195,7 +195,7 @@ function init(){
 if [[ $(command -v dialog) ]]; then
 	digtater
 elif [[ $(command -v whiptail) ]]; then
-	TERM=linux #Workaround for whiptail --infobox bug
+	TERM=vt220 #Workaround for whiptail --infobox bug
 	whipdater
 else
 	updater
