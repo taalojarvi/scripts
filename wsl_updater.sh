@@ -9,6 +9,9 @@ set -o pipefail
 trap "exit 1" TERM
 export TOP_PID=$$
 
+# Set this to 1 to force console output
+FORCE_CONSOLE=0
+
 # Colours and Graphics
 blue='\033[0;34m'
 cyan='\033[0;36m'
@@ -192,9 +195,9 @@ CURRENT_SHA=$(sha1sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4 )
 }
 
 function init(){
-if [[ $(command -v dialog) ]]; then
+if [ $(command -v dialog) ] && [ $FORCE_CONSOLE == 0 ]; then
 	digtater
-elif [[ $(command -v whiptail) ]]; then
+elif [ $(command -v whiptail) ] && [ $FORCE_CONSOLE == 0 ]; then
 	TERM=vt220 #Workaround for whiptail --infobox bug
 	whipdater
 else
