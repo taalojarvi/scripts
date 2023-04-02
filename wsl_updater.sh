@@ -1,7 +1,7 @@
 #!/bin/bash -e
 # SPDX-License-Identifier: Apache-2.0
 # Script for Updating Kernel for WSL2
-# Last Updated on 27th June 2022 03:49 PM IST
+# Last Updated on 02 Mar 2023 11:15 AM IST
 # Copyright (C) Karthik Sreedevan V <sreedevan05@gmail.com>
 
 # Used by blam() to kill main process from within a subprocess
@@ -10,7 +10,7 @@ trap "exit 1" TERM
 export TOP_PID=$$
 
 # Set this to 1 to force console output
-FORCE_CONSOLE=0
+FORCE_CONSOLE=1
 
 # Colours and Graphics
 blue='\033[0;34m'
@@ -22,8 +22,6 @@ green='\e[32m'
 DIVIDER="$blue***********************************************$nocol"
 TITLE="WSL Kernel Updater"
 BACKTITLE="Copyright(C) 2022 Karthik Sreedevan V"
-# Not yet implemented
-WHIPARGS='--title "WSL Kernel Updater" --backtitle "Copyright(C) 2022 Karthik Sreedevan V"'
 
 # Add link to the Github Releases
 # Use latest specified release format as stipulated in https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases
@@ -57,43 +55,9 @@ function diginfo() {
 dialog --title "$TITLE" --backtitle "$BACKTITLE" --infobox "$1" $2 $3
 }
 
-# Macros to generate TUI with whiptail
-function whipmsg(){
-whiptail --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$1" $2 $3
-}
-
-function whipgauge() {
-whiptail --title "$TITLE" --backtitle "$BACKTITLE" --gauge "$1" $2 $3 $4
-}
-
-function whipinfo() {
-whiptail --title "$TITLE" --backtitle "$BACKTITLE" --infobox "$1" $2 $3
-}
-
 # Command-fail state handler
 function blam() {
-if [[ $(command -v whiptail) ]]; then
-	case "$1" in
-		1) clear && whipmsg "Download Failed! Please check your internet connection." 5 75 
-	   	   exit 1
-   	   	   ;;
-		2) clear && whipmsg "Remote kernel image not found! Aborting." 5 75 
-   	   	   kill -s TERM $TOP_PID
-   	   	   ;;
-		3) clear && whipmsg "Local kernel image not found! Please check your KERNEL_PATH." 5 75 
-   	   	   kill -s TERM $TOP_PID
-   	   	   ;;
-		4) clear && whipmsg "SHA256 failed. Aborting." 5 75 
-  	   	   kill -s TERM $TOP_PID
-  	   	   ;;
-		5) clear && whipmsg "Copying kernel image failed. Please check your KERNEL_PATH" 5 75 
-		   exit 1
-		   ;;
-		*) clear && whipmsg "Achievement Unlocked! [How did we get here?]" 5 75 
-		   kill -s TERM $TOP_PID
-		   ;;
-	esac
-elif [[ $(command -v dialog) ]]; then
+if [[ $(command -v dialog) ]]; then
 	case "$1" in
 		1) clear && digmsg "Download Failed! Please check your internet connection." 5 75 
 	   	   exit 1
@@ -163,7 +127,9 @@ fi
 # Update with dialog boxes
 function digtater() {
 clear && diginfo "Checking for updates..." 3 50
-wget -r -q "$KERNEL_URL" -O bzImage || blam 1
+wget --progress=dot "$KERNEL_URL" -O bzImage 2>&1 | grep "%" | sed -u -e "s,\.,,g" | awk '{print $2}' | sed -u -e "s,\%,,g"  | dialog --gauge "Downloading update. Please wait!" 7 50   || blam 1
+clear
+REMOTE_VER=$(file -b bzImage | grep -o 'version [^ ]*' | cut -d ' ' -f 2 || blam 2)
 UPDATE_SHA=$(sha1sum bzImage | cut -d ' ' -f 1 || blam 4 )
 CURRENT_SHA=$(sha1sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4 )
 
@@ -173,35 +139,19 @@ CURRENT_SHA=$(sha1sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4 )
 	else
 		clear && diginfo "An update was found! Installing..." 3 50
 		mv -f bzImage "$KERNEL_PATH" || blam 5
-		clear && digmsg "Update completed!" 5 50
-	fi
-}
-
-# Update with whiptail TUI
-function whipdater(){
-clear && whipinfo "Checking for updates..." 7 50 
-wget -r -q "$KERNEL_URL" -O bzImage || blam 1
-UPDATE_SHA=$(sha1sum bzImage | cut -d ' ' -f 1 || blam 4 )
-CURRENT_SHA=$(sha1sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4 )
-
-	if [ "$UPDATE_SHA" = "$CURRENT_SHA" ]; then
-		clear && whipmsg "Kernel is up to date! No actions were taken." 7 50
-		rm bzImage
-	else
-		clear && whipinfo "An update was found! Installing..." 7 50
-		mv -f bzImage "$KERNEL_PATH" || blam 5
-		clear && whipmsg "Update completed!" 7 50
+		clear && digmsg "Update Completed. Kernel version is $REMOTE_VER" 5 68
 	fi
 }
 
 function init(){
 if [ $(command -v dialog) ] && [ $FORCE_CONSOLE == 0 ]; then
 	digtater
-elif [ $(command -v whiptail) ] && [ $FORCE_CONSOLE == 0 ]; then
-	TERM=vt220 #Workaround for whiptail --infobox bug
-	whipdater
+	clear
+	exit 0
 else
 	updater
+	clear
+	exit 0
 fi
 }
 
