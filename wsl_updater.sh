@@ -10,7 +10,7 @@ trap "exit 1" TERM
 export TOP_PID=$$
 
 # Set this to 1 to force console output
-FORCE_CONSOLE=1
+FORCE_CONSOLE=0
 
 # Colours and Graphics
 blue='\033[0;34m'
@@ -105,6 +105,7 @@ fi
 # updater function
 function updater() {
 banner
+printf "$cyan For a better experience, install the dialog package.$nocol\n\n"
 printf "$cyan *Downloading latest kernel image$nocol\n\n"
 wget -r -q --show-progress "$KERNEL_URL" -O bzImage || blam 1
 
@@ -150,7 +151,6 @@ if [ $(command -v dialog) ] && [ $FORCE_CONSOLE == 0 ]; then
 	exit 0
 else
 	updater
-	clear
 	exit 0
 fi
 }
