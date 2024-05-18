@@ -21,7 +21,7 @@ nocol='\033[0m'
 green='\e[32m'
 DIVIDER="$blue***********************************************$nocol"
 TITLE="WSL Kernel Updater"
-BACKTITLE="Copyright(C) 2022 Karthik Sreedevan V"
+BACKTITLE="Copyright(C) 2024 Karthik Sreedevan V"
 
 # Add link to the Github Releases
 # Use latest specified release format as stipulated in https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases
@@ -59,25 +59,25 @@ dialog --title "$TITLE" --backtitle "$BACKTITLE" --infobox "$1" $2 $3
 function blam() {
 if [[ $(command -v dialog) ]]; then
 	case "$1" in
-		1) clear && digmsg "Download Failed! Please check your internet connection." 5 75 
+		1) clear && digmsg "Download Failed! Please check your internet connection." 5 75
 	   	   exit 1
    	   	   ;;
-		2) clear && digmsg "Remote kernel image not found! Aborting." 5 75 
+		2) clear && digmsg "Remote kernel image not found! Aborting." 5 75
    	   	   kill -s TERM $TOP_PID
    	   	   ;;
-		3) clear && digmsg "Local kernel image not found! Please check your KERNEL_PATH." 5 75 
+		3) clear && digmsg "Local kernel image not found! Please check your KERNEL_PATH." 5 75
    	   	   kill -s TERM $TOP_PID
    	   	   ;;
-		4) clear && digmsg "SHA256 failed! Aborting." 5 75 
+		4) clear && digmsg "SHA256 failed! Aborting." 5 75
   	   	   kill -s TERM $TOP_PID
   	   	   ;;
-		5) clear && digmsg "Copying kernel image failed! Please check your KERNEL_PATH." 5 75 
+		5) clear && digmsg "Copying kernel image failed! Please check your KERNEL_PATH." 5 75
 		   exit 1
 		   ;;
-		6) clear && digmsg "Downloaded kernel image appears to be corrupt! Halting." 5 75 
+		6) clear && digmsg "Downloaded kernel image appears to be corrupt! Halting." 5 75
 		   exit 1
 		   ;;
-		*) clear && digmsg "Achievement Unlocked! [How did we get here?]" 5 75 
+		*) clear && digmsg "Achievement Unlocked! [How did we get here?]" 5 75
 		   kill -s TERM $TOP_PID
 		   ;;
 	esac
@@ -86,10 +86,10 @@ else
 		1) printf "$red \n *Download Failed! Please check your internet connection.$nocol\n\n"
 	   	   exit 1
    	   	   ;;
-		2) printf "$red \n *Remote kernel image not found! Aborting.$nocol\n\n" 
+		2) printf "$red \n *Remote kernel image not found! Aborting.$nocol\n\n"
    	   	   kill -s TERM $TOP_PID
    	   	   ;;
-		3) printf "$red \n *Local kernel image not found! Please check your KERNEL_PATH.$nocol\n\n" 
+		3) printf "$red \n *Local kernel image not found! Please check your KERNEL_PATH.$nocol\n\n"
    	   	   kill -s TERM $TOP_PID
    	   	   ;;
 		4) printf "$red \n *SHA256 failed. Aborting.$nocol\n\n"
@@ -128,7 +128,7 @@ if [ "$LOCAL_SHA" != "$UPDATE_SHA_REMOTE" ] ; then
 	if [ "$UPDATE_SHA_LOCAL" != "$UPDATE_SHA_REMOTE" ]; then
 		blam 9
 	fi
-	
+
 	printf "\n\n$blue *An update was found! Installing...$nocol\n\n"
 	mv -f -v bzImage "$KERNEL_PATH" || blam 5
 	printf "\n$green *Kernel was succesfully updated! Please restart your WSL2 instance.$nocol\n\n"
@@ -156,13 +156,13 @@ if [ "$LOCAL_SHA" != "$UPDATE_SHA_REMOTE" ]; then
 		if [ "$UPDATE_SHA_LOCAL" != "$UPDATE_SHA_REMOTE" ]; then
 			blam 9
 		fi
-	
+
 		clear && diginfo "An update was found! Installing..." 3 50
 		mv -f bzImage "$KERNEL_PATH" || blam 5
 		clear && digmsg "Update Completed. Kernel version is $REMOTE_VER" 5 68
 else
 	clear && digmsg "Kernel is up to date! No actions were taken." 5 50
-	rm -f bzImage 
+	rm -f bzImage
 fi
 }
 
