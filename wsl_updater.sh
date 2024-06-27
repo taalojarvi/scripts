@@ -25,7 +25,7 @@ BACKTITLE="Copyright(C) 2024 Karthik Sreedevan V"
 
 # Add link to the Github Releases
 # Use latest specified release format as stipulated in https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases
-KERNEL_URL=https://github.com/Locietta/xanmod-kernel-WSL2/releases/latest/download/bzImage-x64v3
+KERNEL_URL=https://github.com/taalojarvi/xanmod-kernel-WSL2/releases/latest/download/bzImage-zen2
 
 # Modify with the path to your bzImage
 KERNEL_PATH=/mnt/c/Users/sreed/bzImage
@@ -55,57 +55,39 @@ function diginfo() {
 dialog --title "$TITLE" --backtitle "$BACKTITLE" --infobox "$1" $2 $3
 }
 
+# Macro to handle process exit or crash
+function pow() {
+	if [ "$1" != "1" ]; then
+		exit 1
+	else
+		kill -s TERM $TOP_PID
+	fi
+}
+
 # Command-fail state handler
 function blam() {
+case "$1" in
+	1) error_message="Download Failed! Please check your internet connection." ;;
+	2) error_message="Remote kernel image not found! Aborting." ;; 
+	3) error_message="Local kernel image not found! Please check your KERNEL_PATH." ;;
+	4) error_message="Checksum error! Aborting." ;;
+	5) error_message="Copying kernel image failed! Please check your KERNEL_PATH." ;;
+	6) error_message="Downloaded kernel image appears to be corrupt! Halting." ;;
+	7) error_message="Checksum mismatch. Please check your internet connecton." ;;
+	*) error_message="Achievement Unlocked! [How did we get here?]" ;;
+esac
+
+# Some errors require a less graceful exit
+[[ "$1" == "1" || "$1" == "5" || "$1" == "6" || "$1" == "7" ]] && fail=1
+
 if [[ $(command -v dialog) ]]; then
-	case "$1" in
-		1) clear && digmsg "Download Failed! Please check your internet connection." 5 75
-	   	   exit 1
-   	   	   ;;
-		2) clear && digmsg "Remote kernel image not found! Aborting." 5 75
-   	   	   kill -s TERM $TOP_PID
-   	   	   ;;
-		3) clear && digmsg "Local kernel image not found! Please check your KERNEL_PATH." 5 75
-   	   	   kill -s TERM $TOP_PID
-   	   	   ;;
-		4) clear && digmsg "SHA256 failed! Aborting." 5 75
-  	   	   kill -s TERM $TOP_PID
-  	   	   ;;
-		5) clear && digmsg "Copying kernel image failed! Please check your KERNEL_PATH." 5 75
-		   exit 1
-		   ;;
-		6) clear && digmsg "Downloaded kernel image appears to be corrupt! Halting." 5 75
-		   exit 1
-		   ;;
-		*) clear && digmsg "Achievement Unlocked! [How did we get here?]" 5 75
-		   kill -s TERM $TOP_PID
-		   ;;
-	esac
+	digmsg "$error_message" 5 75
 else
-	case "$1" in
-		1) printf "$red \n *Download Failed! Please check your internet connection.$nocol\n\n"
-	   	   exit 1
-   	   	   ;;
-		2) printf "$red \n *Remote kernel image not found! Aborting.$nocol\n\n"
-   	   	   kill -s TERM $TOP_PID
-   	   	   ;;
-		3) printf "$red \n *Local kernel image not found! Please check your KERNEL_PATH.$nocol\n\n"
-   	   	   kill -s TERM $TOP_PID
-   	   	   ;;
-		4) printf "$red \n *SHA256 failed. Aborting.$nocol\n\n"
-  	   	   kill -s TERM $TOP_PID
-  	   	   ;;
-		5) printf "$red \n *Copying kernel image failed. Please check your KERNEL_PATH$nocol\n\n"
-		   exit 1
-		   ;;
-		6) printf "$red \n *Downloaded kernel image appears to be corrupt! Halting.$nocol\n\n"
-		   exit 1
-		   ;;
-		*) printf "$red \n *Achievement Unlocked! [How did we get here?] $nocol\n\n"
-		   kill -s TERM $TOP_PID
-		   ;;
-	esac
+	printf "$red \n "$error_message" $nocol\n\n"
 fi
+
+pow "$fail"
+
 }
 
 # updater function
@@ -113,7 +95,7 @@ function updater() {
 banner
 printf "$cyan For a better experience, install the dialog package.$nocol\n\n"
 printf "$cyan *Checking for updates. Please wait!$nocol\n\n"
-UPDATE_SHA_REMOTE=$(curl -Ls https://github.com/Locietta/xanmod-kernel-WSL2/releases/latest/download/bzImage-x64v3.sha256 | cut -d ' ' -f 1)
+UPDATE_SHA_REMOTE=$(curl -Ls https://github.com/Locietta/xanmod-kernel-WSL2/releases/latest/download/bzImage-zen2.sha256 | cut -d ' ' -f 1)
 LOCAL_SHA=$(sha256sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4)
 
 if [ "$LOCAL_SHA" != "$UPDATE_SHA_REMOTE" ] ; then
@@ -144,7 +126,7 @@ function digtater() {
 clear && diginfo "Checking for updates..." 3 50
 
 LOCAL_SHA=$(sha256sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4 )
-UPDATE_SHA_REMOTE=$(curl -Ls https://github.com/Locietta/xanmod-kernel-WSL2/releases/latest/download/bzImage-x64v3.sha256 | cut -d ' ' -f 1)
+UPDATE_SHA_REMOTE=$(curl -Ls https://github.com/Locietta/xanmod-kernel-WSL2/releases/latest/download/bzImage-zen2.sha256 | cut -d ' ' -f 1)
 
 if [ "$LOCAL_SHA" != "$UPDATE_SHA_REMOTE" ]; then
 	wget --progress=dot "$KERNEL_URL" -O bzImage 2>&1 | grep "%" | sed -u -e "s,\.,,g" | awk '{print $2}' | sed -u -e "s,\%,,g"  | dialog --gauge "Downloading update. Please wait!" 7 50   || blam 1
@@ -154,7 +136,7 @@ if [ "$LOCAL_SHA" != "$UPDATE_SHA_REMOTE" ]; then
 
 
 		if [ "$UPDATE_SHA_LOCAL" != "$UPDATE_SHA_REMOTE" ]; then
-			blam 9
+			blam 7
 		fi
 
 		clear && diginfo "An update was found! Installing..." 3 50
