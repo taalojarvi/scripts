@@ -95,7 +95,7 @@ function updater() {
 banner
 printf "$cyan For a better experience, install the dialog package.$nocol\n\n"
 printf "$cyan *Checking for updates. Please wait!$nocol\n\n"
-UPDATE_SHA_REMOTE=$(curl -Ls https://github.com/Locietta/xanmod-kernel-WSL2/releases/latest/download/bzImage-zen2.sha256 | cut -d ' ' -f 1)
+UPDATE_SHA_REMOTE=$(curl -Ls https://github.com/taalojarvi/xanmod-kernel-WSL2/releases/latest/download/bzImage-zen2.sha256 | cut -d ' ' -f 1)
 LOCAL_SHA=$(sha256sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4)
 
 if [ "$LOCAL_SHA" != "$UPDATE_SHA_REMOTE" ] ; then
@@ -126,7 +126,7 @@ function digtater() {
 clear && diginfo "Checking for updates..." 3 50
 
 LOCAL_SHA=$(sha256sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4 )
-UPDATE_SHA_REMOTE=$(curl -Ls https://github.com/Locietta/xanmod-kernel-WSL2/releases/latest/download/bzImage-zen2.sha256 | cut -d ' ' -f 1)
+UPDATE_SHA_REMOTE=$(curl -Ls https://github.com/taalojarvi/xanmod-kernel-WSL2/releases/latest/download/bzImage-zen2.sha256 | cut -d ' ' -f 1)
 
 if [ "$LOCAL_SHA" != "$UPDATE_SHA_REMOTE" ]; then
 	wget --progress=dot "$KERNEL_URL" -O bzImage 2>&1 | grep "%" | sed -u -e "s,\.,,g" | awk '{print $2}' | sed -u -e "s,\%,,g"  | dialog --gauge "Downloading update. Please wait!" 7 50   || blam 1
