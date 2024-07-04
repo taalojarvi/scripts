@@ -25,7 +25,7 @@ BACKTITLE="Copyright(C) 2024 Karthik Sreedevan V"
 
 # Add link to the Github Releases
 # Use latest specified release format as stipulated in https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases
-KERNEL_URL=https://github.com/taalojarvi/xanmod-kernel-WSL2/releases/latest/download/bzImage-zen2
+KERNEL_URL=https://github.com/taalojarvi/Stratosphere-Kernel-WSL2/releases/download/mainline/bzImage-zen2
 
 # Modify with the path to your bzImage
 KERNEL_PATH=/mnt/c/Users/sreed/bzImage
@@ -95,8 +95,9 @@ function updater() {
 banner
 printf "$cyan For a better experience, install the dialog package.$nocol\n\n"
 printf "$cyan *Checking for updates. Please wait!$nocol\n\n"
-UPDATE_SHA_REMOTE=$(curl -Ls https://github.com/taalojarvi/xanmod-kernel-WSL2/releases/latest/download/bzImage-zen2.sha256 | cut -d ' ' -f 1)
+
 LOCAL_SHA=$(sha256sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4)
+UPDATE_SHA_REMOTE=$(curl -Ls https://github.com/taalojarvi/Stratosphere-Kernel-WSL2/releases/download/mainline/bzImage-zen2.sha256 | cut -d ' ' -f 1)
 
 if [ "$LOCAL_SHA" != "$UPDATE_SHA_REMOTE" ] ; then
 	printf "$cyan *Downloading latest kernel image$nocol\n\n"
@@ -126,7 +127,7 @@ function digtater() {
 clear && diginfo "Checking for updates..." 3 50
 
 LOCAL_SHA=$(sha256sum $KERNEL_PATH | cut -d ' ' -f 1 || blam 4 )
-UPDATE_SHA_REMOTE=$(curl -Ls https://github.com/taalojarvi/xanmod-kernel-WSL2/releases/latest/download/bzImage-zen2.sha256 | cut -d ' ' -f 1)
+UPDATE_SHA_REMOTE=$(curl -Ls https://github.com/taalojarvi/Stratosphere-Kernel-WSL2/releases/download/mainline/bzImage-zen2.sha256 | cut -d ' ' -f 1)
 
 if [ "$LOCAL_SHA" != "$UPDATE_SHA_REMOTE" ]; then
 	wget --progress=dot "$KERNEL_URL" -O bzImage 2>&1 | grep "%" | sed -u -e "s,\.,,g" | awk '{print $2}' | sed -u -e "s,\%,,g"  | dialog --gauge "Downloading update. Please wait!" 7 50   || blam 1
